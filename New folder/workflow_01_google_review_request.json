@@ -1,0 +1,356 @@
+{
+  "name": "IET - Post-Inspection Google Review Request",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Workflow 1: Post-Inspection Google Review Request\n\n**Trigger:** Webhook POST after inspection is marked complete\n\n**Required payload fields:**\n- customer_name\n- customer_email\n- customer_phone\n- inspection_type\n- inspector_name\n- inspection_date\n- google_review_link\n\n**Flow:**\n1. Receive inspection data\n2. Wait 24 hours\n3. Send SMS review request\n4. Wait 3 days\n5. Send email follow-up\n6. Log to Google Sheets",
+        "height": 280,
+        "width": 340
+      },
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "iet-review-request",
+        "responseMode": "immediately",
+        "responseData": "allEntries"
+      },
+      "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "name": "Webhook - Receive Inspection Data",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [400, 300],
+      "webhookId": "iet-review-request-webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "field-001",
+              "name": "customer_name",
+              "value": "={{ $json.customer_name }}",
+              "type": "string"
+            },
+            {
+              "id": "field-002",
+              "name": "customer_email",
+              "value": "={{ $json.customer_email }}",
+              "type": "string"
+            },
+            {
+              "id": "field-003",
+              "name": "customer_phone",
+              "value": "={{ $json.customer_phone }}",
+              "type": "string"
+            },
+            {
+              "id": "field-004",
+              "name": "inspection_type",
+              "value": "={{ $json.inspection_type }}",
+              "type": "string"
+            },
+            {
+              "id": "field-005",
+              "name": "inspector_name",
+              "value": "={{ $json.inspector_name }}",
+              "type": "string"
+            },
+            {
+              "id": "field-006",
+              "name": "inspection_date",
+              "value": "={{ $json.inspection_date }}",
+              "type": "string"
+            },
+            {
+              "id": "field-007",
+              "name": "google_review_link",
+              "value": "={{ $json.google_review_link }}",
+              "type": "string"
+            },
+            {
+              "id": "field-008",
+              "name": "workflow_start_time",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+      "name": "Set - Prepare Variables",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "unit": "hours",
+        "amount": 24
+      },
+      "id": "d4e5f6a7-b8c9-0123-defa-234567890123",
+      "name": "Wait - 24 Hours",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [880, 300],
+      "webhookId": "wait-24h-review"
+    },
+    {
+      "parameters": {
+        "from": "+1YOUR_TWILIO_PHONE_NUMBER",
+        "to": "={{ $json.customer_phone }}",
+        "message": "Hi {{ $json.customer_name }}, this is the team at Indoor Environmental Testing. Thank you for trusting us with your {{ $json.inspection_type }} inspection on {{ $json.inspection_date }}. We'd love to hear about your experience — your review helps other families find trusted testing in the area. Google Review Link: {{ $json.google_review_link }} — Martine & the IET Team",
+        "options": {}
+      },
+      "id": "e5f6a7b8-c9d0-1234-efab-345678901234",
+      "name": "Twilio - Send Review Request SMS",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [1120, 300],
+      "credentials": {
+        "twilioApi": {
+          "id": "YOUR_TWILIO_CREDENTIAL_ID",
+          "name": "Twilio Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "field-sms-date",
+              "name": "sms_sent_date",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f6a7b8c9-d0e1-2345-fabc-456789012345",
+      "name": "Set - Record SMS Sent Date",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [1360, 300]
+    },
+    {
+      "parameters": {
+        "unit": "days",
+        "amount": 3
+      },
+      "id": "a7b8c9d0-e1f2-3456-abcd-567890123456",
+      "name": "Wait - 3 Days",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [1600, 300],
+      "webhookId": "wait-3d-review-email"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.customer_email }}",
+        "subject": "Quick follow-up from Indoor Environmental Testing",
+        "emailType": "html",
+        "message": "<p>Hi {{ $json.customer_name }},</p>\n\n<p>We wanted to follow up after your recent <strong>{{ $json.inspection_type }} inspection</strong> on {{ $json.inspection_date }} with {{ $json.inspector_name }}.</p>\n\n<p>At Indoor Environmental Testing, our goal is to give every client in the Madison and Nashville areas complete peace of mind about their indoor environment. We hope your experience reflected that commitment.</p>\n\n<p>If you have a moment, we'd be truly grateful if you shared your experience with a Google review. Reviews from clients like you help other families and business owners find trusted testing when they need it most.</p>\n\n<p style=\"text-align: center; margin: 30px 0;\">\n  <a href=\"{{ $json.google_review_link }}\" style=\"background-color: #2E7D32; color: white; padding: 14px 28px; text-decoration: none; border-radius: 4px; font-size: 16px;\">Leave a Google Review</a>\n</p>\n\n<p>It only takes 2 minutes, and it makes a real difference for our small business.</p>\n\n<p>If you have any questions about your inspection results or want to schedule a follow-up test, don't hesitate to reach out — we're always happy to help.</p>\n\n<p>Warm regards,<br>\n<strong>Martine Davis</strong><br>\nIndoor Environmental Testing Inc.<br>\nMadison, WI | Nashville, TN<br>\n<a href=\"mailto:martine@indoorenvironmentaltesting.com\">martine@indoorenvironmentaltesting.com</a></p>",
+        "options": {
+          "replyTo": "martine@indoorenvironmentaltesting.com"
+        }
+      },
+      "id": "b8c9d0e1-f2a3-4567-bcde-678901234567",
+      "name": "Gmail - Send Review Follow-Up Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1840, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail - IET Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "field-email-date",
+              "name": "email_sent_date",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "field-status",
+              "name": "status",
+              "value": "follow_up_sent",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c9d0e1f2-a3b4-5678-cdef-789012345678",
+      "name": "Set - Record Email Sent Date",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [2080, 300]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Review Requests",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "customer_name": "={{ $json.customer_name }}",
+            "customer_email": "={{ $json.customer_email }}",
+            "inspection_type": "={{ $json.inspection_type }}",
+            "inspection_date": "={{ $json.inspection_date }}",
+            "inspector_name": "={{ $json.inspector_name }}",
+            "sms_sent_date": "={{ $json.sms_sent_date }}",
+            "email_sent_date": "={{ $json.email_sent_date }}",
+            "status": "={{ $json.status }}",
+            "google_review_link": "={{ $json.google_review_link }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            { "id": "customer_name", "displayName": "customer_name", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "customer_email", "displayName": "customer_email", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "inspection_type", "displayName": "inspection_type", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "inspection_date", "displayName": "inspection_date", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "inspector_name", "displayName": "inspector_name", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "sms_sent_date", "displayName": "sms_sent_date", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "email_sent_date", "displayName": "email_sent_date", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "status", "displayName": "status", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "google_review_link", "displayName": "google_review_link", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d0e1f2a3-b4c5-6789-defa-890123456789",
+      "name": "Google Sheets - Log Review Request",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [2320, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets - IET Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Receive Inspection Data": {
+      "main": [
+        [
+          {
+            "node": "Set - Prepare Variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Prepare Variables": {
+      "main": [
+        [
+          {
+            "node": "Wait - 24 Hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait - 24 Hours": {
+      "main": [
+        [
+          {
+            "node": "Twilio - Send Review Request SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twilio - Send Review Request SMS": {
+      "main": [
+        [
+          {
+            "node": "Set - Record SMS Sent Date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Record SMS Sent Date": {
+      "main": [
+        [
+          {
+            "node": "Wait - 3 Days",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait - 3 Days": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Send Review Follow-Up Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail - Send Review Follow-Up Email": {
+      "main": [
+        [
+          {
+            "node": "Set - Record Email Sent Date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Record Email Sent Date": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets - Log Review Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    { "name": "IET" },
+    { "name": "Reviews" },
+    { "name": "Post-Inspection" }
+  ]
+}

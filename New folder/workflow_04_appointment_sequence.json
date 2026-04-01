@@ -1,0 +1,891 @@
+{
+  "name": "IET - Appointment Confirmation & Prep Sequence",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Workflow 4: Appointment Confirmation & Prep Sequence\n\n**Trigger:** Webhook POST from AppTotal booking confirmation\n\n**Required payload:**\n- customer_name, customer_email, customer_phone\n- appointment_date (YYYY-MM-DD)\n- appointment_time (HH:MM, 24h)\n- service_type: mold | air_quality | emf | chemical | multi\n- inspector_name\n- property_address\n\n**Sequence:**\n1. Immediate confirmation email + SMS\n2. 48-hour reminder with service-specific prep instructions\n3. Day-of reminder 2 hours before\n4. Trigger review request workflow post-inspection\n5. Log all events to Google Sheets\n\n**IMPORTANT:** Update YOUR_WORKFLOW_01_WEBHOOK_URL to point to Workflow 1's webhook URL.",
+        "height": 360,
+        "width": 440
+      },
+      "id": "wf4-0001-aaaa-bbbb-cccc-000000000001",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "iet-appointment-booked",
+        "responseMode": "immediately",
+        "responseData": "allEntries"
+      },
+      "id": "wf4-0002-aaaa-bbbb-cccc-000000000002",
+      "name": "Webhook - Receive AppTotal Booking",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [500, 400],
+      "webhookId": "iet-apptotal-booking-webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf4-f-001",
+              "name": "customer_name",
+              "value": "={{ $json.customer_name }}",
+              "type": "string"
+            },
+            {
+              "id": "wf4-f-002",
+              "name": "customer_email",
+              "value": "={{ $json.customer_email }}",
+              "type": "string"
+            },
+            {
+              "id": "wf4-f-003",
+              "name": "customer_phone",
+              "value": "={{ $json.customer_phone }}",
+              "type": "string"
+            },
+            {
+              "id": "wf4-f-004",
+              "name": "appointment_date",
+              "value": "={{ $json.appointment_date }}",
+              "type": "string"
+            },
+            {
+              "id": "wf4-f-005",
+              "name": "appointment_time",
+              "value": "={{ $json.appointment_time }}",
+              "type": "string"
+            },
+            {
+              "id": "wf4-f-006",
+              "name": "service_type",
+              "value": "={{ $json.service_type }}",
+              "type": "string"
+            },
+            {
+              "id": "wf4-f-007",
+              "name": "inspector_name",
+              "value": "={{ $json.inspector_name }}",
+              "type": "string"
+            },
+            {
+              "id": "wf4-f-008",
+              "name": "property_address",
+              "value": "={{ $json.property_address }}",
+              "type": "string"
+            },
+            {
+              "id": "wf4-f-009",
+              "name": "booking_timestamp",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "wf4-f-010",
+              "name": "service_type_label",
+              "value": "={{ $json.service_type === 'mold' ? 'Mold Inspection' : $json.service_type === 'air_quality' ? 'Air Quality Testing' : $json.service_type === 'emf' ? 'EMF Testing' : $json.service_type === 'chemical' ? 'Chemical/VOC Testing' : 'Multi-Service Inspection' }}",
+              "type": "string"
+            },
+            {
+              "id": "wf4-f-011",
+              "name": "appointment_datetime_iso",
+              "value": "={{ $json.appointment_date + 'T' + $json.appointment_time + ':00' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "wf4-0003-aaaa-bbbb-cccc-000000000003",
+      "name": "Set - Prepare Booking Variables",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [740, 400]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.customer_email }}",
+        "subject": "=Your {{ $json.service_type_label }} is confirmed — Indoor Environmental Testing",
+        "emailType": "html",
+        "message": "<p>Hi {{ $json.customer_name }},</p>\n\n<p>Great news — your appointment is confirmed! Here are the details:</p>\n\n<table style=\"border-collapse: collapse; width: 100%; max-width: 500px; margin: 20px 0;\">\n  <tr style=\"background: #2E7D32; color: white;\">\n    <td colspan=\"2\" style=\"padding: 12px 16px; font-size: 16px; font-weight: bold;\">Appointment Confirmation</td>\n  </tr>\n  <tr>\n    <td style=\"padding: 10px 16px; font-weight: bold; border: 1px solid #ddd; background: #f9f9f9;\">Service</td>\n    <td style=\"padding: 10px 16px; border: 1px solid #ddd;\">{{ $json.service_type_label }}</td>\n  </tr>\n  <tr>\n    <td style=\"padding: 10px 16px; font-weight: bold; border: 1px solid #ddd; background: #f9f9f9;\">Date</td>\n    <td style=\"padding: 10px 16px; border: 1px solid #ddd;\">{{ $json.appointment_date }}</td>\n  </tr>\n  <tr>\n    <td style=\"padding: 10px 16px; font-weight: bold; border: 1px solid #ddd; background: #f9f9f9;\">Time</td>\n    <td style=\"padding: 10px 16px; border: 1px solid #ddd;\">{{ $json.appointment_time }}</td>\n  </tr>\n  <tr>\n    <td style=\"padding: 10px 16px; font-weight: bold; border: 1px solid #ddd; background: #f9f9f9;\">Inspector</td>\n    <td style=\"padding: 10px 16px; border: 1px solid #ddd;\">{{ $json.inspector_name }}</td>\n  </tr>\n  <tr>\n    <td style=\"padding: 10px 16px; font-weight: bold; border: 1px solid #ddd; background: #f9f9f9;\">Property Address</td>\n    <td style=\"padding: 10px 16px; border: 1px solid #ddd;\">{{ $json.property_address }}</td>\n  </tr>\n</table>\n\n<h3 style=\"color: #2E7D32;\">What to expect:</h3>\n<ul>\n  <li>Your inspector will arrive within a 30-minute window of your scheduled time</li>\n  <li>The inspection typically takes 1–3 hours depending on the property size and services</li>\n  <li>You'll receive a detailed written report within 2–3 business days</li>\n  <li>We'll walk you through preliminary findings before we leave</li>\n</ul>\n\n<p>You'll receive a preparation email 48 hours before your appointment with specific instructions to ensure the most accurate results.</p>\n\n<p>If you need to reschedule or have any questions, please don't hesitate to contact us:</p>\n<ul>\n  <li>Email: <a href=\"mailto:martine@indoorenvironmentaltesting.com\">martine@indoorenvironmentaltesting.com</a></li>\n  <li>Phone: YOUR_PHONE_NUMBER</li>\n  <li>Online: <a href=\"YOUR_APPTOTAL_BOOKING_LINK\">Reschedule Online</a></li>\n</ul>\n\n<p>We look forward to seeing you on {{ $json.appointment_date }}!</p>\n\n<p>Warm regards,<br>\n<strong>Martine Davis &amp; the IET Team</strong><br>\nIndoor Environmental Testing Inc.<br>\nMadison, WI | Nashville, TN</p>",
+        "options": {
+          "replyTo": "martine@indoorenvironmentaltesting.com"
+        }
+      },
+      "id": "wf4-0004-aaaa-bbbb-cccc-000000000004",
+      "name": "Gmail - Immediate Confirmation Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [980, 280],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail - IET Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "from": "+1YOUR_TWILIO_PHONE_NUMBER",
+        "to": "={{ $json.customer_phone }}",
+        "message": "Hi {{ $json.customer_name }}, your {{ $json.service_type_label }} at {{ $json.property_address }} is confirmed for {{ $json.appointment_date }} at {{ $json.appointment_time }} with {{ $json.inspector_name }}. Reply with any questions! — IET (YOUR_PHONE_NUMBER)",
+        "options": {}
+      },
+      "id": "wf4-0005-aaaa-bbbb-cccc-000000000005",
+      "name": "Twilio - Immediate Confirmation SMS",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [980, 500],
+      "credentials": {
+        "twilioApi": {
+          "id": "YOUR_TWILIO_CREDENTIAL_ID",
+          "name": "Twilio Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "unit": "hours",
+        "amount": 48,
+        "resume": "specificTime",
+        "resumeTime": "={{ $('Set - Prepare Booking Variables').item.json.appointment_datetime_iso }}"
+      },
+      "id": "wf4-0006-aaaa-bbbb-cccc-000000000006",
+      "name": "Wait - Until 48 Hours Before Appointment",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [1220, 400],
+      "webhookId": "wait-48h-before-appt"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-mold",
+              "leftValue": "={{ $json.service_type }}",
+              "rightValue": "mold",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "wf4-0007-aaaa-bbbb-cccc-000000000007",
+      "name": "If - Service Type: Mold?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1460, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-aq",
+              "leftValue": "={{ $json.service_type }}",
+              "rightValue": "air_quality",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "wf4-0008-aaaa-bbbb-cccc-000000000008",
+      "name": "If - Service Type: Air Quality?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1700, 560]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-emf",
+              "leftValue": "={{ $json.service_type }}",
+              "rightValue": "emf",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "wf4-0009-aaaa-bbbb-cccc-000000000009",
+      "name": "If - Service Type: EMF?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1940, 680]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "prep-mold",
+              "name": "prep_instructions",
+              "value": "To get the most accurate results from your mold inspection, please:\n\n• Do NOT disturb any areas you suspect may have mold — do not clean, bleach, or cover suspect surfaces\n• Note the location and approximate size of any visible staining, discoloration, or musty odors\n• If possible, have documentation of any past water damage, roof leaks, or plumbing issues ready\n• Make sure all areas of the home are accessible, including basement, attic, and crawl spaces\n• Do not run HVAC or air purifiers for 2 hours before the inspection\n• Provide access to your HVAC system and air handler",
+              "type": "string"
+            },
+            {
+              "id": "prep-mold-short",
+              "name": "prep_sms",
+              "value": "For your mold inspection: Don't clean/disturb suspect areas. Keep all rooms accessible incl. basement & attic. Turn off air purifiers 2 hrs before. Have any water damage history ready.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "wf4-0010-aaaa-bbbb-cccc-000000000010",
+      "name": "Set - Mold Prep Instructions",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [1700, 280]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "prep-aq",
+              "name": "prep_instructions",
+              "value": "To get the most accurate results from your air quality test, please:\n\n• Keep all windows and exterior doors CLOSED for at least 12 hours before the inspection\n• Do not burn candles, incense, or use air fresheners for 24 hours prior\n• Note any symptoms you or family members experience (headaches, fatigue, allergies) and when they occur\n• Identify any new materials in the home — new furniture, flooring, paint, or carpet installed in the past 12 months\n• Do not vacuum in the 12 hours before the inspection\n• Have the make/model of your HVAC system and when filters were last changed\n• Note the location of any gas appliances",
+              "type": "string"
+            },
+            {
+              "id": "prep-aq-short",
+              "name": "prep_sms",
+              "value": "For your air quality test: Close all windows 12+ hrs before. No candles/air fresheners 24 hrs prior. Note any symptoms or new materials (furniture, flooring, paint) in the past year.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "wf4-0011-aaaa-bbbb-cccc-000000000011",
+      "name": "Set - Air Quality Prep Instructions",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [1940, 500]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "prep-emf",
+              "name": "prep_instructions",
+              "value": "To get the most accurate results from your EMF inspection, please:\n\n• Locate and note the position of your smart meter (usually on the exterior of the home)\n• Have a list of all WiFi routers, mesh network nodes, and smart home devices ready\n• Note the location of your electrical panel(s)\n• Know the approximate location of any nearby cell towers or utility transformers\n• Do not rearrange furniture or electronics before the inspection — we want to test in normal conditions\n• Leave all electronics in their typical operating state (computers on, WiFi active, etc.)\n• Have your electric utility account info available if we need to request smart meter data",
+              "type": "string"
+            },
+            {
+              "id": "prep-emf-short",
+              "name": "prep_sms",
+              "value": "For your EMF inspection: Note your smart meter location. List WiFi routers & smart devices. Leave all electronics in normal operating positions. Keep WiFi on during inspection.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "wf4-0012-aaaa-bbbb-cccc-000000000012",
+      "name": "Set - EMF Prep Instructions",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [2180, 600]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "prep-chem",
+              "name": "prep_instructions",
+              "value": "To get the most accurate results from your chemical/VOC inspection, please:\n\n• Note any recent renovation work — painting, flooring installation, cabinetry, or new appliances in the past 12 months\n• List any pest treatments (extermination) performed in the past 6 months, including what products were used\n• Have information about any building materials used in recent construction or renovation\n• Note the location and age of any gas appliances\n• Keep windows closed for 12 hours before the inspection\n• Do not use cleaning products, air fresheners, or scented products 24 hours prior\n• Have documentation of any known chemical spills or contamination events",
+              "type": "string"
+            },
+            {
+              "id": "prep-chem-short",
+              "name": "prep_sms",
+              "value": "For your chemical/VOC test: Close windows 12 hrs prior. Note recent renovations & pest treatments. No cleaning products or air fresheners 24 hrs before. List new materials used in past year.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "wf4-0013-aaaa-bbbb-cccc-000000000013",
+      "name": "Set - Chemical Prep Instructions",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [2180, 760]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "prep-multi",
+              "name": "prep_instructions",
+              "value": "To get the most accurate results from your multi-service inspection, please follow all of these preparation steps:\n\nMOLD:\n• Do not clean or disturb any areas with visible staining or musty odors\n• Ensure basement, attic, and crawl spaces are accessible\n• Have documentation of any past water damage or leaks\n\nAIR QUALITY:\n• Keep all windows and exterior doors CLOSED for at least 12 hours before the inspection\n• No candles, incense, or air fresheners for 24 hours prior\n• Note any new materials (furniture, flooring, paint) installed in the past 12 months\n\nEMF:\n• Note the location of your smart meter, electrical panel, and WiFi equipment\n• Leave all electronics in their normal operating positions\n\nCHEMICAL:\n• Note any recent renovations, pest treatments, or chemical applications\n• Do not use cleaning products 24 hours prior\n\nGENERAL:\n• Ensure access to all areas of the property\n• Have a list of any health symptoms you or occupants have noticed\n• Be available to walk through the property with the inspector at the start",
+              "type": "string"
+            },
+            {
+              "id": "prep-multi-short",
+              "name": "prep_sms",
+              "value": "For your multi-service inspection: Close windows 12 hrs before. Don't disturb suspect mold areas. Leave electronics in normal positions. Note any recent renovations, pest treatments, or health symptoms. See your confirmation email for full prep details.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "wf4-0014-aaaa-bbbb-cccc-000000000014",
+      "name": "Set - Multi-Service Prep Instructions",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [2420, 840]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.customer_email }}",
+        "subject": "=Your {{ $json.service_type_label }} is tomorrow — here's how to prepare",
+        "emailType": "html",
+        "message": "<p>Hi {{ $json.customer_name }},</p>\n\n<p>Your <strong>{{ $json.service_type_label }}</strong> with {{ $json.inspector_name }} is scheduled for <strong>tomorrow, {{ $json.appointment_date }} at {{ $json.appointment_time }}</strong> at {{ $json.property_address }}.</p>\n\n<p>To ensure we get the most accurate results possible, please review the preparation steps below:</p>\n\n<div style=\"background: #f0f7f0; border-left: 4px solid #2E7D32; padding: 16px 20px; margin: 20px 0;\">\n  <h3 style=\"color: #2E7D32; margin-top: 0;\">Preparation Instructions</h3>\n  <pre style=\"white-space: pre-wrap; font-family: inherit; margin: 0;\">{{ $json.prep_instructions }}</pre>\n</div>\n\n<h3>Day-of reminders:</h3>\n<ul>\n  <li>Inspector {{ $json.inspector_name }} will arrive within a 30-minute window of {{ $json.appointment_time }}</li>\n  <li>Please ensure someone 18+ is present for the full inspection</li>\n  <li>The inspection typically takes 1–3 hours</li>\n  <li>You'll receive preliminary verbal findings before the inspector leaves</li>\n  <li>Written report will be delivered within 2–3 business days</li>\n</ul>\n\n<p>If you need to reschedule or have questions, please contact us as soon as possible:</p>\n<ul>\n  <li>Phone: YOUR_PHONE_NUMBER</li>\n  <li>Email: <a href=\"mailto:martine@indoorenvironmentaltesting.com\">martine@indoorenvironmentaltesting.com</a></li>\n</ul>\n\n<p>See you tomorrow!</p>\n\n<p>Warm regards,<br>\n<strong>Martine Davis &amp; the IET Team</strong><br>\nIndoor Environmental Testing Inc.</p>",
+        "options": {
+          "replyTo": "martine@indoorenvironmentaltesting.com"
+        }
+      },
+      "id": "wf4-0015-aaaa-bbbb-cccc-000000000015",
+      "name": "Gmail - 48-Hour Prep Reminder Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [2660, 400],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail - IET Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "from": "+1YOUR_TWILIO_PHONE_NUMBER",
+        "to": "={{ $json.customer_phone }}",
+        "message": "IET Reminder: Your {{ $json.service_type_label }} with {{ $json.inspector_name }} is TOMORROW ({{ $json.appointment_date }}) at {{ $json.appointment_time }} — {{ $json.property_address }}. Prep tip: {{ $json.prep_sms }} Questions? Call YOUR_PHONE_NUMBER",
+        "options": {}
+      },
+      "id": "wf4-0016-aaaa-bbbb-cccc-000000000016",
+      "name": "Twilio - 48-Hour Reminder SMS",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [2660, 580],
+      "credentials": {
+        "twilioApi": {
+          "id": "YOUR_TWILIO_CREDENTIAL_ID",
+          "name": "Twilio Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "unit": "hours",
+        "amount": 46
+      },
+      "id": "wf4-0017-aaaa-bbbb-cccc-000000000017",
+      "name": "Wait - Until 2 Hours Before Appointment",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [2900, 480],
+      "webhookId": "wait-dayof-2h-before"
+    },
+    {
+      "parameters": {
+        "from": "+1YOUR_TWILIO_PHONE_NUMBER",
+        "to": "={{ $json.customer_phone }}",
+        "message": "Reminder: {{ $json.inspector_name }} from Indoor Environmental Testing will be at {{ $json.property_address }} today around {{ $json.appointment_time }}. See you soon! Questions? Call YOUR_PHONE_NUMBER — IET",
+        "options": {}
+      },
+      "id": "wf4-0018-aaaa-bbbb-cccc-000000000018",
+      "name": "Twilio - Day-Of Reminder SMS",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [3140, 400],
+      "credentials": {
+        "twilioApi": {
+          "id": "YOUR_TWILIO_CREDENTIAL_ID",
+          "name": "Twilio Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "unit": "hours",
+        "amount": 4
+      },
+      "id": "wf4-0019-aaaa-bbbb-cccc-000000000019",
+      "name": "Wait - Inspection Duration + 2hr Buffer",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [3380, 400],
+      "webhookId": "wait-post-inspection"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "YOUR_WORKFLOW_01_WEBHOOK_URL",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "customer_name",
+              "value": "={{ $json.customer_name }}"
+            },
+            {
+              "name": "customer_email",
+              "value": "={{ $json.customer_email }}"
+            },
+            {
+              "name": "customer_phone",
+              "value": "={{ $json.customer_phone }}"
+            },
+            {
+              "name": "inspection_type",
+              "value": "={{ $json.service_type_label }}"
+            },
+            {
+              "name": "inspector_name",
+              "value": "={{ $json.inspector_name }}"
+            },
+            {
+              "name": "inspection_date",
+              "value": "={{ $json.appointment_date }}"
+            },
+            {
+              "name": "google_review_link",
+              "value": "YOUR_GOOGLE_REVIEW_LINK"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "wf4-0020-aaaa-bbbb-cccc-000000000020",
+      "name": "HTTP Request - Trigger Review Workflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [3620, 400]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf4-log-001",
+              "name": "confirmation_sent",
+              "value": "yes",
+              "type": "string"
+            },
+            {
+              "id": "wf4-log-002",
+              "name": "reminder_48h_sent",
+              "value": "yes",
+              "type": "string"
+            },
+            {
+              "id": "wf4-log-003",
+              "name": "dayof_sent",
+              "value": "yes",
+              "type": "string"
+            },
+            {
+              "id": "wf4-log-004",
+              "name": "review_triggered",
+              "value": "yes",
+              "type": "string"
+            },
+            {
+              "id": "wf4-log-005",
+              "name": "logged_timestamp",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "wf4-0021-aaaa-bbbb-cccc-000000000021",
+      "name": "Set - Prepare Log Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [3860, 400]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Appointment Log",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "customer_name": "={{ $json.customer_name }}",
+            "customer_email": "={{ $json.customer_email }}",
+            "customer_phone": "={{ $json.customer_phone }}",
+            "appointment_date": "={{ $json.appointment_date }}",
+            "appointment_time": "={{ $json.appointment_time }}",
+            "service_type": "={{ $json.service_type }}",
+            "service_type_label": "={{ $json.service_type_label }}",
+            "inspector_name": "={{ $json.inspector_name }}",
+            "property_address": "={{ $json.property_address }}",
+            "booking_timestamp": "={{ $json.booking_timestamp }}",
+            "confirmation_sent": "={{ $json.confirmation_sent }}",
+            "reminder_48h_sent": "={{ $json.reminder_48h_sent }}",
+            "dayof_sent": "={{ $json.dayof_sent }}",
+            "review_triggered": "={{ $json.review_triggered }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            { "id": "customer_name", "displayName": "customer_name", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "customer_email", "displayName": "customer_email", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "customer_phone", "displayName": "customer_phone", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "appointment_date", "displayName": "appointment_date", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "appointment_time", "displayName": "appointment_time", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "service_type", "displayName": "service_type", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "service_type_label", "displayName": "service_type_label", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "inspector_name", "displayName": "inspector_name", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "property_address", "displayName": "property_address", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "booking_timestamp", "displayName": "booking_timestamp", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "confirmation_sent", "displayName": "confirmation_sent", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "reminder_48h_sent", "displayName": "reminder_48h_sent", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "dayof_sent", "displayName": "dayof_sent", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "review_triggered", "displayName": "review_triggered", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true }
+          ]
+        },
+        "options": {}
+      },
+      "id": "wf4-0022-aaaa-bbbb-cccc-000000000022",
+      "name": "Google Sheets - Log Appointment",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [4100, 400],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets - IET Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Receive AppTotal Booking": {
+      "main": [
+        [
+          {
+            "node": "Set - Prepare Booking Variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Prepare Booking Variables": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Immediate Confirmation Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Twilio - Immediate Confirmation SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail - Immediate Confirmation Email": {
+      "main": [
+        [
+          {
+            "node": "Wait - Until 48 Hours Before Appointment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twilio - Immediate Confirmation SMS": {
+      "main": [
+        [
+          {
+            "node": "Wait - Until 48 Hours Before Appointment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait - Until 48 Hours Before Appointment": {
+      "main": [
+        [
+          {
+            "node": "If - Service Type: Mold?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - Service Type: Mold?": {
+      "main": [
+        [
+          {
+            "node": "Set - Mold Prep Instructions",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If - Service Type: Air Quality?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - Service Type: Air Quality?": {
+      "main": [
+        [
+          {
+            "node": "Set - Air Quality Prep Instructions",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If - Service Type: EMF?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - Service Type: EMF?": {
+      "main": [
+        [
+          {
+            "node": "Set - EMF Prep Instructions",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set - Chemical Prep Instructions",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Set - Multi-Service Prep Instructions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Mold Prep Instructions": {
+      "main": [
+        [
+          {
+            "node": "Gmail - 48-Hour Prep Reminder Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Air Quality Prep Instructions": {
+      "main": [
+        [
+          {
+            "node": "Gmail - 48-Hour Prep Reminder Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - EMF Prep Instructions": {
+      "main": [
+        [
+          {
+            "node": "Gmail - 48-Hour Prep Reminder Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Chemical Prep Instructions": {
+      "main": [
+        [
+          {
+            "node": "Gmail - 48-Hour Prep Reminder Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Multi-Service Prep Instructions": {
+      "main": [
+        [
+          {
+            "node": "Gmail - 48-Hour Prep Reminder Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail - 48-Hour Prep Reminder Email": {
+      "main": [
+        [
+          {
+            "node": "Twilio - 48-Hour Reminder SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twilio - 48-Hour Reminder SMS": {
+      "main": [
+        [
+          {
+            "node": "Wait - Until 2 Hours Before Appointment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait - Until 2 Hours Before Appointment": {
+      "main": [
+        [
+          {
+            "node": "Twilio - Day-Of Reminder SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twilio - Day-Of Reminder SMS": {
+      "main": [
+        [
+          {
+            "node": "Wait - Inspection Duration + 2hr Buffer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait - Inspection Duration + 2hr Buffer": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - Trigger Review Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - Trigger Review Workflow": {
+      "main": [
+        [
+          {
+            "node": "Set - Prepare Log Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Prepare Log Data": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets - Log Appointment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    { "name": "IET" },
+    { "name": "Appointments" },
+    { "name": "Confirmations" },
+    { "name": "AppTotal" }
+  ]
+}

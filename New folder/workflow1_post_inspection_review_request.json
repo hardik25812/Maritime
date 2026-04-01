@@ -1,0 +1,355 @@
+{
+  "name": "IET - Post-Inspection Google Review Request",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "iet-inspection-complete",
+        "responseMode": "immediatelyAfterLastNode",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000001",
+      "name": "Webhook - Inspection Complete",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "notes": "Triggered by AppTotal or manually when inspection is marked complete. Expects POST body with: customer_name, customer_email, customer_phone, inspection_type, inspector_name, inspection_date"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "customer_name",
+              "value": "={{ $json.body.customer_name }}"
+            },
+            {
+              "name": "customer_email",
+              "value": "={{ $json.body.customer_email }}"
+            },
+            {
+              "name": "customer_phone",
+              "value": "={{ $json.body.customer_phone }}"
+            },
+            {
+              "name": "inspection_type",
+              "value": "={{ $json.body.inspection_type }}"
+            },
+            {
+              "name": "inspector_name",
+              "value": "={{ $json.body.inspector_name }}"
+            },
+            {
+              "name": "inspection_date",
+              "value": "={{ $json.body.inspection_date }}"
+            },
+            {
+              "name": "review_link",
+              "value": "https://g.page/r/YOUR_GOOGLE_REVIEW_LINK/review"
+            },
+            {
+              "name": "workflow_start_time",
+              "value": "={{ new Date().toISOString() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000002",
+      "name": "Set - Store Inspection Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "notes": "Normalizes and stores all incoming inspection data plus review link placeholder"
+    },
+    {
+      "parameters": {
+        "unit": "hours",
+        "amount": 24
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000003",
+      "name": "Wait - 24 Hours",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "webhookId": "wait-24hr-review",
+      "notes": "Waits 24 hours after inspection completion before sending the review request SMS"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "sms_body",
+              "value": "=Hi {{ $json.customer_name }}! This is Indoor Environmental Testing. Thank you for choosing us for your {{ $json.inspection_type }} inspection yesterday — we hope {{ $json.inspector_name }} took great care of you! If you have a moment, we'd love it if you could share your experience with a quick Google review. It means the world to our small business: {{ $json.review_link }} Thank you! — The IET Team"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000004",
+      "name": "Set - Build SMS Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "notes": "Builds personalized SMS body using customer name, inspection type, and inspector name"
+    },
+    {
+      "parameters": {
+        "from": "+1XXXXXXXXXX",
+        "to": "={{ $json.customer_phone }}",
+        "message": "={{ $json.sms_body }}",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000005",
+      "name": "Twilio - Send Review Request SMS",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [1120, 300],
+      "credentials": {
+        "twilioApi": {
+          "id": "TWILIO_CREDENTIAL_ID",
+          "name": "Twilio Account - IET"
+        }
+      },
+      "notes": "CREDENTIAL REQUIRED: Twilio API credentials (Account SID + Auth Token). Replace +1XXXXXXXXXX with IET Twilio number."
+    },
+    {
+      "parameters": {
+        "unit": "days",
+        "amount": 3
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000006",
+      "name": "Wait - 3 Days for Review",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [1340, 300],
+      "webhookId": "wait-3day-review",
+      "notes": "Waits 3 days after the SMS to check if a review was left. In production, connect to Google My Business API to check; here we proceed with follow-up email."
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.customer_email }}",
+        "subject": "We'd love to hear about your {{ $json.inspection_type }} inspection experience",
+        "emailType": "html",
+        "message": "=<html><body style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;\">\n<img src=\"https://YOUR_LOGO_URL\" alt=\"Indoor Environmental Testing\" style=\"max-width: 200px; margin-bottom: 20px;\" />\n<h2 style=\"color: #2c6e49;\">Hi {{ $json.customer_name }},</h2>\n<p>We hope you're feeling great about the <strong>{{ $json.inspection_type }} inspection</strong> {{ $json.inspector_name }} completed for you. We take pride in giving every client a thorough, professional experience — and your feedback helps us continue to improve and helps other families in Madison and Nashville find the help they need.</p>\n<p>If you have just 60 seconds, would you mind leaving us a quick Google review?</p>\n<p style=\"text-align: center; margin: 30px 0;\">\n  <a href=\"{{ $json.review_link }}\" style=\"background-color: #2c6e49; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: bold;\">Leave a Google Review</a>\n</p>\n<p>It only takes a minute and makes a huge difference for our small, locally-owned business. Thank you so much for trusting Indoor Environmental Testing with your home.</p>\n<p>Warmly,<br/><strong>Martine Davis</strong><br/>Owner, Indoor Environmental Testing Inc.<br/>Madison, WI | Nashville, TN<br/>📞 (XXX) XXX-XXXX</p>\n<hr style=\"border: 1px solid #eee; margin: 20px 0;\" />\n<p style=\"font-size: 12px; color: #999;\">Indoor Environmental Testing Inc. | Mold, Air Quality & EMF Testing<br/>If you have any concerns about your inspection results, please don't hesitate to reach out.</p>\n</body></html>",
+        "options": {
+          "replyTo": "martine@indoorenvironmentaltesting.com"
+        }
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000007",
+      "name": "Gmail - Send Follow-Up Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1560, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "GMAIL_CREDENTIAL_ID",
+          "name": "Gmail OAuth2 - IET"
+        }
+      },
+      "notes": "CREDENTIAL REQUIRED: Gmail OAuth2 credentials. Replace logo URL, phone number, and reply-to email with real values."
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "value": "YOUR_GOOGLE_SHEETS_DOCUMENT_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "value": "Review Requests",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Customer Name": "={{ $('Set - Store Inspection Data').item.json.customer_name }}",
+            "Customer Email": "={{ $('Set - Store Inspection Data').item.json.customer_email }}",
+            "Customer Phone": "={{ $('Set - Store Inspection Data').item.json.customer_phone }}",
+            "Inspection Type": "={{ $('Set - Store Inspection Data').item.json.inspection_type }}",
+            "Inspector Name": "={{ $('Set - Store Inspection Data').item.json.inspector_name }}",
+            "Inspection Date": "={{ $('Set - Store Inspection Data').item.json.inspection_date }}",
+            "SMS Sent Date": "={{ new Date(Date.now() - 3 * 24 * 60 * 60 * 1000 - 24 * 60 * 60 * 1000).toISOString() }}",
+            "Follow-Up Email Sent": "Yes",
+            "Follow-Up Email Date": "={{ new Date().toISOString() }}",
+            "Workflow Completed": "={{ new Date().toISOString() }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000008",
+      "name": "Google Sheets - Log Review Request",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [1780, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GSHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 - IET"
+        }
+      },
+      "notes": "CREDENTIAL REQUIRED: Google Sheets OAuth2. Replace YOUR_GOOGLE_SHEETS_DOCUMENT_ID with the actual Sheet ID from the URL. Sheet must have a tab named 'Review Requests'."
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "error_message",
+              "value": "={{ $json.error }}"
+            },
+            {
+              "name": "failed_node",
+              "value": "Twilio SMS or Gmail"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{ new Date().toISOString() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000009",
+      "name": "Set - Error Info",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1120, 520],
+      "notes": "Captures error details when SMS or email fails"
+    },
+    {
+      "parameters": {
+        "sendTo": "martine@indoorenvironmentaltesting.com",
+        "subject": "IET Workflow Error - Review Request Failed",
+        "emailType": "html",
+        "message": "=<p>A review request workflow step failed.</p><p><strong>Error:</strong> {{ $json.error_message }}</p><p><strong>Failed Node:</strong> {{ $json.failed_node }}</p><p><strong>Time:</strong> {{ $json.timestamp }}</p><p>Please check n8n for details and retry manually if needed.</p>",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000010",
+      "name": "Gmail - Error Notification to Martine",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1340, 520],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "GMAIL_CREDENTIAL_ID",
+          "name": "Gmail OAuth2 - IET"
+        }
+      },
+      "notes": "Sends error notification to Martine if any workflow step fails"
+    }
+  ],
+  "connections": {
+    "Webhook - Inspection Complete": {
+      "main": [
+        [
+          {
+            "node": "Set - Store Inspection Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Store Inspection Data": {
+      "main": [
+        [
+          {
+            "node": "Wait - 24 Hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait - 24 Hours": {
+      "main": [
+        [
+          {
+            "node": "Set - Build SMS Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Build SMS Message": {
+      "main": [
+        [
+          {
+            "node": "Twilio - Send Review Request SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twilio - Send Review Request SMS": {
+      "main": [
+        [
+          {
+            "node": "Wait - 3 Days for Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait - 3 Days for Review": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Send Follow-Up Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail - Send Follow-Up Email": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets - Log Review Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Error Info": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Error Notification to Martine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "IET",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "Reviews",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2026-03-31T00:00:00.000Z",
+  "id": "workflow-iet-001"
+}

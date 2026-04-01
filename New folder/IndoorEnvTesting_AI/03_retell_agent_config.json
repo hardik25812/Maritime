@@ -1,0 +1,332 @@
+{
+  "agent_name": "Jordan - Indoor Environmental Testing Inc.",
+  "agent_type": "phone_agent",
+  "version": "1.0.0",
+
+  "voice_settings": {
+    "provider": "elevenlabs",
+    "voice_id": "21m00Tcm4TlvDq8ikWAM",
+    "voice_name": "Rachel",
+    "voice_description": "Warm, clear, professional female voice — calm and knowledgeable",
+    "stability": 0.55,
+    "similarity_boost": 0.80,
+    "style": 0.20,
+    "use_speaker_boost": true,
+    "fallback_voice": {
+      "provider": "openai",
+      "voice_id": "nova"
+    }
+  },
+
+  "language": "en-US",
+
+  "agent_behavior": {
+    "responsiveness": 1.0,
+    "interruption_sensitivity": 0.7,
+    "backchannel_frequency": 0.4,
+    "backchannel_words": ["I see", "Right", "Of course", "Understood", "Sure"],
+    "reminder_trigger_ms": 10000,
+    "reminder_max_count": 2,
+    "normalize_for_speech": true,
+    "end_call_after_silence_ms": 30000,
+    "enable_backchannel": true
+  },
+
+  "call_settings": {
+    "max_call_duration_ms": 1800000,
+    "ambient_sound": "office",
+    "ambient_sound_volume": 0.05,
+    "boosted_keywords": [
+      "mold", "Stachybotrys", "spore", "ERMI", "air quality", "VOC", "radon",
+      "formaldehyde", "EMF", "EMR", "5G", "dirty electricity", "RF", "milligauss",
+      "asbestos", "lead", "particulate", "PM2.5", "remediation", "AppTotal",
+      "Martine", "Madison", "Nashville", "Indoor Environmental"
+    ]
+  },
+
+  "system_prompt": "[FULL SYSTEM PROMPT FROM SECTION 1 — INSERT VERBATIM HERE]",
+
+  "begin_message": "Thank you for calling Indoor Environmental Testing. This is Jordan — how can I help you today?",
+
+  "general_tools": [
+    {
+      "type": "end_call",
+      "name": "end_call",
+      "description": "End the call after confirming all information has been collected and next steps communicated."
+    }
+  ],
+
+  "custom_llm_extra_params": {
+    "temperature": 0.35,
+    "max_tokens": 500,
+    "top_p": 0.90
+  },
+
+  "llm_model": "claude-3-5-sonnet",
+  "llm_provider": "anthropic",
+
+  "webhook_settings": {
+    "webhook_url": "https://your-backend.com/api/retell/webhook",
+    "webhook_events": [
+      "call_started",
+      "call_ended",
+      "call_analyzed"
+    ]
+  },
+
+  "function_calls": [
+    {
+      "name": "submit_inquiry_intake",
+      "description": "Submit a completed new client inquiry form to the backend CRM or AppTotal queue. Call this ONLY after all required fields have been collected and confirmed with the caller.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "caller_name": {
+            "type": "string",
+            "description": "Full name of the caller"
+          },
+          "callback_phone": {
+            "type": "string",
+            "description": "Best callback phone number including area code"
+          },
+          "property_address": {
+            "type": "string",
+            "description": "Full street address of the property to be inspected"
+          },
+          "city": {
+            "type": "string",
+            "description": "City of the property"
+          },
+          "state": {
+            "type": "string",
+            "description": "State of the property (WI, TN, IL, etc.)"
+          },
+          "in_service_area": {
+            "type": "boolean",
+            "description": "Whether the property address falls within the confirmed service area"
+          },
+          "concern_type": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["mold", "air_quality", "emf", "chemical", "combined", "unknown"]
+            },
+            "description": "Type(s) of environmental concern"
+          },
+          "property_type": {
+            "type": "string",
+            "enum": ["residential_single_family", "condo", "multi_unit", "commercial", "industrial", "other"],
+            "description": "Type of property"
+          },
+          "square_footage": {
+            "type": "string",
+            "description": "Approximate square footage of the property, if provided"
+          },
+          "concern_description": {
+            "type": "string",
+            "description": "Caller's description of the issue, symptoms, or reason for testing"
+          },
+          "health_symptoms_reported": {
+            "type": "boolean",
+            "description": "Whether the caller reported any health symptoms potentially related to the environment"
+          },
+          "prior_testing_or_remediation": {
+            "type": "boolean",
+            "description": "Whether prior testing or remediation has occurred at the property"
+          },
+          "real_estate_transaction": {
+            "type": "boolean",
+            "description": "Whether a real estate transaction is involved"
+          },
+          "transaction_deadline": {
+            "type": "string",
+            "description": "If real estate transaction, the closing or deadline date if provided"
+          },
+          "preferred_timeframe": {
+            "type": "string",
+            "description": "Caller's preferred days or times for an inspection"
+          },
+          "urgency_flag": {
+            "type": "string",
+            "enum": ["routine", "elevated", "urgent"],
+            "description": "Urgency level based on call content — routine for standard inquiries, elevated for health symptoms or tight timelines, urgent for acute health events or 48-hour deadlines"
+          },
+          "referral_source": {
+            "type": "string",
+            "description": "How the caller heard about Indoor Environmental Testing"
+          },
+          "call_notes": {
+            "type": "string",
+            "description": "Any additional context from the conversation not captured in other fields"
+          },
+          "after_hours": {
+            "type": "boolean",
+            "description": "Whether this call was received outside of normal business hours"
+          },
+          "call_type": {
+            "type": "string",
+            "enum": ["new_inquiry", "post_inspection", "scheduling", "pricing", "callback_request", "commercial", "other"],
+            "description": "Category of call"
+          }
+        },
+        "required": [
+          "caller_name",
+          "callback_phone",
+          "property_address",
+          "city",
+          "state",
+          "in_service_area",
+          "concern_type",
+          "property_type",
+          "concern_description",
+          "urgency_flag",
+          "call_type",
+          "after_hours"
+        ]
+      }
+    },
+    {
+      "name": "check_service_area",
+      "description": "Verify whether a given city and state falls within Indoor Environmental Testing's service area before committing to a service call.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string",
+            "description": "City name to check"
+          },
+          "state": {
+            "type": "string",
+            "description": "Two-letter state code"
+          },
+          "zip_code": {
+            "type": "string",
+            "description": "ZIP code if available, for more precise area check"
+          }
+        },
+        "required": ["city", "state"]
+      }
+    },
+    {
+      "name": "flag_urgent_callback",
+      "description": "Flag a call for urgent human callback — use when caller has acute health symptoms, a critical deadline, is highly distressed, or specifically requests to speak with a human or Martine.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "caller_name": {
+            "type": "string",
+            "description": "Name of caller"
+          },
+          "callback_phone": {
+            "type": "string",
+            "description": "Best callback number"
+          },
+          "urgency_reason": {
+            "type": "string",
+            "enum": [
+              "acute_health_symptoms",
+              "real_estate_deadline_48hr",
+              "caller_distressed",
+              "legal_inquiry",
+              "requested_human",
+              "technical_question_beyond_scope"
+            ],
+            "description": "Reason for urgent escalation"
+          },
+          "brief_description": {
+            "type": "string",
+            "description": "Short description of the situation for the human reviewer"
+          }
+        },
+        "required": ["caller_name", "callback_phone", "urgency_reason", "brief_description"]
+      }
+    },
+    {
+      "name": "log_post_inspection_query",
+      "description": "Log a post-inspection callback with report questions for specialist follow-up.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "caller_name": {
+            "type": "string",
+            "description": "Caller name"
+          },
+          "callback_phone": {
+            "type": "string",
+            "description": "Callback number"
+          },
+          "property_address": {
+            "type": "string",
+            "description": "Address of the inspected property"
+          },
+          "inspection_date_approx": {
+            "type": "string",
+            "description": "Approximate date of inspection if caller knows it"
+          },
+          "question_summary": {
+            "type": "string",
+            "description": "Summary of the caller's questions about their report"
+          },
+          "requires_specialist": {
+            "type": "boolean",
+            "description": "Whether the question requires a specialist rather than general knowledge"
+          }
+        },
+        "required": ["caller_name", "callback_phone", "question_summary", "requires_specialist"]
+      }
+    }
+  ],
+
+  "post_call_analysis": {
+    "enabled": true,
+    "custom_analysis_data": [
+      {
+        "name": "call_outcome",
+        "description": "What was the result of the call?",
+        "type": "enum",
+        "choices": [
+          "intake_collected",
+          "question_answered_no_action",
+          "urgent_flagged",
+          "message_taken_after_hours",
+          "post_inspection_query_logged",
+          "out_of_service_area",
+          "caller_hung_up",
+          "other"
+        ]
+      },
+      {
+        "name": "service_type_interest",
+        "description": "What type of service was the caller interested in?",
+        "type": "enum",
+        "choices": ["mold", "air_quality", "emf", "chemical", "combined", "unknown", "not_applicable"]
+      },
+      {
+        "name": "urgency_level",
+        "description": "Assessed urgency of the call",
+        "type": "enum",
+        "choices": ["routine", "elevated", "urgent"]
+      },
+      {
+        "name": "caller_satisfaction_estimate",
+        "description": "Estimated caller satisfaction based on tone and outcome",
+        "type": "enum",
+        "choices": ["positive", "neutral", "frustrated", "unknown"]
+      },
+      {
+        "name": "intake_complete",
+        "description": "Was all required intake information collected?",
+        "type": "boolean"
+      }
+    ]
+  },
+
+  "metadata": {
+    "client": "Indoor Environmental Testing Inc.",
+    "owner": "Martine Davis",
+    "primary_service_area": ["Madison WI metro + 60-mile radius", "Northern Chicago suburbs", "Nashville TN metro"],
+    "scheduling_system": "AppTotal",
+    "agent_build_version": "1.0.0",
+    "environment": "production"
+  }
+}

@@ -1,0 +1,370 @@
+{
+  "name": "IET - Retell AI Missed Call & Call Follow-Up",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Workflow 2: Retell AI Call Follow-Up\n\n**Trigger:** Webhook POST from Retell AI `call_ended` event\n\n**Retell payload includes:**\n- call_id, call_status\n- start_timestamp, end_timestamp\n- transcript\n- call_analysis.call_summary\n- call_analysis.user_sentiment\n- retell_llm_dynamic_variables:\n  - caller_name\n  - caller_phone\n  - property_address\n  - concern_type\n  - description\n\n**YES path:** Intake collected → confirmation SMS + internal email + log\n**NO path:** Missed/incomplete → \"we missed you\" SMS + internal alert + log",
+        "height": 320,
+        "width": 380
+      },
+      "id": "11111111-aaaa-bbbb-cccc-111111111111",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "iet-retell-call-ended",
+        "responseMode": "immediately",
+        "responseData": "allEntries"
+      },
+      "id": "22222222-aaaa-bbbb-cccc-222222222222",
+      "name": "Webhook - Receive Retell Call Data",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [440, 340],
+      "webhookId": "iet-retell-call-ended-webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "r-field-001",
+              "name": "call_id",
+              "value": "={{ $json.call_id }}",
+              "type": "string"
+            },
+            {
+              "id": "r-field-002",
+              "name": "call_status",
+              "value": "={{ $json.call_status }}",
+              "type": "string"
+            },
+            {
+              "id": "r-field-003",
+              "name": "start_timestamp",
+              "value": "={{ $json.start_timestamp }}",
+              "type": "string"
+            },
+            {
+              "id": "r-field-004",
+              "name": "end_timestamp",
+              "value": "={{ $json.end_timestamp }}",
+              "type": "string"
+            },
+            {
+              "id": "r-field-005",
+              "name": "caller_name",
+              "value": "={{ $json.retell_llm_dynamic_variables?.caller_name ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "r-field-006",
+              "name": "caller_phone",
+              "value": "={{ $json.retell_llm_dynamic_variables?.caller_phone ?? $json.from_number ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "r-field-007",
+              "name": "property_address",
+              "value": "={{ $json.retell_llm_dynamic_variables?.property_address ?? 'not provided' }}",
+              "type": "string"
+            },
+            {
+              "id": "r-field-008",
+              "name": "concern_type",
+              "value": "={{ $json.retell_llm_dynamic_variables?.concern_type ?? 'not specified' }}",
+              "type": "string"
+            },
+            {
+              "id": "r-field-009",
+              "name": "description",
+              "value": "={{ $json.retell_llm_dynamic_variables?.description ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "r-field-010",
+              "name": "call_summary",
+              "value": "={{ $json.call_analysis?.call_summary ?? 'No summary available' }}",
+              "type": "string"
+            },
+            {
+              "id": "r-field-011",
+              "name": "user_sentiment",
+              "value": "={{ $json.call_analysis?.user_sentiment ?? 'Unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "r-field-012",
+              "name": "transcript",
+              "value": "={{ $json.transcript ?? 'No transcript available' }}",
+              "type": "string"
+            },
+            {
+              "id": "r-field-013",
+              "name": "call_duration_seconds",
+              "value": "={{ ($json.end_timestamp - $json.start_timestamp) / 1000 }}",
+              "type": "number"
+            },
+            {
+              "id": "r-field-014",
+              "name": "received_timestamp",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "r-field-015",
+              "name": "intake_collected",
+              "value": "={{ $json.retell_llm_dynamic_variables?.caller_name ? 'yes' : 'no' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "33333333-aaaa-bbbb-cccc-333333333333",
+      "name": "Set - Extract Retell Variables",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [680, 340]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-001",
+              "leftValue": "={{ $json.caller_name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "44444444-aaaa-bbbb-cccc-444444444444",
+      "name": "If - Was Intake Collected?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [920, 340]
+    },
+    {
+      "parameters": {
+        "from": "+1YOUR_TWILIO_PHONE_NUMBER",
+        "to": "={{ $json.caller_phone }}",
+        "message": "Hi {{ $json.caller_name }}, thanks for calling Indoor Environmental Testing! We've received your inquiry about {{ $json.concern_type }} at {{ $json.property_address }}. Our office will follow up with you within 1 business day to schedule your inspection. — Martine & the IET Team",
+        "options": {}
+      },
+      "id": "55555555-aaaa-bbbb-cccc-555555555555",
+      "name": "Twilio - SMS Confirmation (Intake Complete)",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [1160, 200],
+      "credentials": {
+        "twilioApi": {
+          "id": "YOUR_TWILIO_CREDENTIAL_ID",
+          "name": "Twilio Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "from": "+1YOUR_TWILIO_PHONE_NUMBER",
+        "to": "={{ $json.caller_phone }}",
+        "message": "Hi! We missed your call at Indoor Environmental Testing. We'll call you back within the hour. To book faster: YOUR_APPTOTAL_BOOKING_LINK — Questions? Reply here.",
+        "options": {}
+      },
+      "id": "66666666-aaaa-bbbb-cccc-666666666666",
+      "name": "Twilio - SMS We Missed You (Incomplete)",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [1160, 480],
+      "credentials": {
+        "twilioApi": {
+          "id": "YOUR_TWILIO_CREDENTIAL_ID",
+          "name": "Twilio Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "martine@indoorenvironmentaltesting.com",
+        "subject": "=New Call: {{ $json.caller_name || 'Unknown Caller' }} - {{ $json.concern_type }}",
+        "emailType": "html",
+        "message": "<h2>New Inbound Call — Indoor Environmental Testing</h2>\n\n<table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n  <tr style=\"background: #f5f5f5;\">\n    <td style=\"padding: 8px 12px; font-weight: bold; border: 1px solid #ddd;\">Caller Name</td>\n    <td style=\"padding: 8px 12px; border: 1px solid #ddd;\">{{ $json.caller_name || 'Not captured' }}</td>\n  </tr>\n  <tr>\n    <td style=\"padding: 8px 12px; font-weight: bold; border: 1px solid #ddd;\">Phone Number</td>\n    <td style=\"padding: 8px 12px; border: 1px solid #ddd;\">{{ $json.caller_phone }}</td>\n  </tr>\n  <tr style=\"background: #f5f5f5;\">\n    <td style=\"padding: 8px 12px; font-weight: bold; border: 1px solid #ddd;\">Property Address</td>\n    <td style=\"padding: 8px 12px; border: 1px solid #ddd;\">{{ $json.property_address }}</td>\n  </tr>\n  <tr>\n    <td style=\"padding: 8px 12px; font-weight: bold; border: 1px solid #ddd;\">Concern Type</td>\n    <td style=\"padding: 8px 12px; border: 1px solid #ddd;\">{{ $json.concern_type }}</td>\n  </tr>\n  <tr style=\"background: #f5f5f5;\">\n    <td style=\"padding: 8px 12px; font-weight: bold; border: 1px solid #ddd;\">Intake Collected</td>\n    <td style=\"padding: 8px 12px; border: 1px solid #ddd;\">{{ $json.intake_collected }}</td>\n  </tr>\n  <tr>\n    <td style=\"padding: 8px 12px; font-weight: bold; border: 1px solid #ddd;\">Caller Sentiment</td>\n    <td style=\"padding: 8px 12px; border: 1px solid #ddd;\">{{ $json.user_sentiment }}</td>\n  </tr>\n  <tr style=\"background: #f5f5f5;\">\n    <td style=\"padding: 8px 12px; font-weight: bold; border: 1px solid #ddd;\">Call Duration</td>\n    <td style=\"padding: 8px 12px; border: 1px solid #ddd;\">{{ $json.call_duration_seconds }} seconds</td>\n  </tr>\n  <tr>\n    <td style=\"padding: 8px 12px; font-weight: bold; border: 1px solid #ddd;\">Call ID</td>\n    <td style=\"padding: 8px 12px; border: 1px solid #ddd;\">{{ $json.call_id }}</td>\n  </tr>\n</table>\n\n<h3 style=\"margin-top: 24px;\">Call Summary</h3>\n<p style=\"background: #f9f9f9; padding: 12px; border-left: 4px solid #2E7D32;\">{{ $json.call_summary }}</p>\n\n<h3>Additional Description</h3>\n<p>{{ $json.description || 'None provided' }}</p>\n\n<h3>Full Transcript</h3>\n<pre style=\"background: #f5f5f5; padding: 12px; white-space: pre-wrap; font-size: 13px;\">{{ $json.transcript }}</pre>\n\n<hr>\n<p style=\"color: #888; font-size: 12px;\">This notification was automatically generated by IET's n8n automation | {{ $json.received_timestamp }}</p>",
+        "options": {
+          "replyTo": "martine@indoorenvironmentaltesting.com"
+        }
+      },
+      "id": "77777777-aaaa-bbbb-cccc-777777777777",
+      "name": "Gmail - Internal Notification to Martine",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1400, 340],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail - IET Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Call Log",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $json.received_timestamp }}",
+            "call_id": "={{ $json.call_id }}",
+            "caller_phone": "={{ $json.caller_phone }}",
+            "caller_name": "={{ $json.caller_name }}",
+            "concern_type": "={{ $json.concern_type }}",
+            "property_address": "={{ $json.property_address }}",
+            "call_duration_seconds": "={{ $json.call_duration_seconds }}",
+            "call_status": "={{ $json.call_status }}",
+            "user_sentiment": "={{ $json.user_sentiment }}",
+            "intake_collected": "={{ $json.intake_collected }}",
+            "sms_sent": "yes",
+            "internal_notified": "yes",
+            "call_summary": "={{ $json.call_summary }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            { "id": "timestamp", "displayName": "timestamp", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "call_id", "displayName": "call_id", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "caller_phone", "displayName": "caller_phone", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "caller_name", "displayName": "caller_name", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "concern_type", "displayName": "concern_type", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "property_address", "displayName": "property_address", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "call_duration_seconds", "displayName": "call_duration_seconds", "required": false, "defaultMatch": false, "display": true, "type": "number", "canBeUsedToMatch": true },
+            { "id": "call_status", "displayName": "call_status", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "user_sentiment", "displayName": "user_sentiment", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "intake_collected", "displayName": "intake_collected", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "sms_sent", "displayName": "sms_sent", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "internal_notified", "displayName": "internal_notified", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "call_summary", "displayName": "call_summary", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true }
+          ]
+        },
+        "options": {}
+      },
+      "id": "88888888-aaaa-bbbb-cccc-888888888888",
+      "name": "Google Sheets - Log Call",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [1640, 340],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets - IET Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Receive Retell Call Data": {
+      "main": [
+        [
+          {
+            "node": "Set - Extract Retell Variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Extract Retell Variables": {
+      "main": [
+        [
+          {
+            "node": "If - Was Intake Collected?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - Was Intake Collected?": {
+      "main": [
+        [
+          {
+            "node": "Twilio - SMS Confirmation (Intake Complete)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Twilio - SMS We Missed You (Incomplete)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twilio - SMS Confirmation (Intake Complete)": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Internal Notification to Martine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twilio - SMS We Missed You (Incomplete)": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Internal Notification to Martine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail - Internal Notification to Martine": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets - Log Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    { "name": "IET" },
+    { "name": "Retell AI" },
+    { "name": "Missed Call" },
+    { "name": "Call Follow-Up" }
+  ]
+}

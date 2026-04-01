@@ -1,0 +1,705 @@
+{
+  "name": "IET - Nashville Lead Generation Email Drip",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Workflow 3: Nashville Lead Generation Email Drip\n\n**Trigger:** Google Sheets — new row added to \"Nashville Leads\" sheet with status = \"new\"\n\n**Sheet columns:**\nlead_name, lead_email, lead_phone, lead_type (residential/commercial), source, date_added, status, contacted_date, response_date, follow_up_2_date, final_date, outcome\n\n**Sequence:**\n- Day 0: Intro email → mark \"contacted\"\n- Day 3: Social proof email (if not responded)\n- Day 7: Final educational email (if not responded) → mark \"sequence_complete\"\n\n**NOTE:** To pause sequence when lead responds, update the sheet row status to \"responded\" — the IF nodes will stop further emails.",
+        "height": 340,
+        "width": 420
+      },
+      "id": "aaaaaaaa-1111-2222-3333-aaaaaaaaaaaa",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_NASHVILLE_LEADS_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Nashville Leads",
+          "mode": "name"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "id": "bbbbbbbb-1111-2222-3333-bbbbbbbbbbbb",
+      "name": "Google Sheets - Watch Nashville Leads",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [480, 380],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets - IET Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-new-status",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "new",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "cccccccc-1111-2222-3333-cccccccccccc",
+      "name": "If - Status is New?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [720, 380]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n-field-001",
+              "name": "lead_name",
+              "value": "={{ $json.lead_name }}",
+              "type": "string"
+            },
+            {
+              "id": "n-field-002",
+              "name": "lead_email",
+              "value": "={{ $json.lead_email }}",
+              "type": "string"
+            },
+            {
+              "id": "n-field-003",
+              "name": "lead_phone",
+              "value": "={{ $json.lead_phone }}",
+              "type": "string"
+            },
+            {
+              "id": "n-field-004",
+              "name": "lead_type",
+              "value": "={{ $json.lead_type }}",
+              "type": "string"
+            },
+            {
+              "id": "n-field-005",
+              "name": "source",
+              "value": "={{ $json.source }}",
+              "type": "string"
+            },
+            {
+              "id": "n-field-006",
+              "name": "date_added",
+              "value": "={{ $json.date_added }}",
+              "type": "string"
+            },
+            {
+              "id": "n-field-007",
+              "name": "row_number",
+              "value": "={{ $json.row_number }}",
+              "type": "number"
+            },
+            {
+              "id": "n-field-008",
+              "name": "lead_type_label",
+              "value": "={{ $json.lead_type === 'commercial' ? 'commercial property' : 'home' }}",
+              "type": "string"
+            },
+            {
+              "id": "n-field-009",
+              "name": "greeting",
+              "value": "={{ $json.lead_type === 'commercial' ? 'As a property or business owner' : 'As a homeowner' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "dddddddd-1111-2222-3333-dddddddddddd",
+      "name": "Set - Prepare Lead Variables",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [960, 260]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.lead_email }}",
+        "subject": "Indoor air quality testing in Nashville — are you protected?",
+        "emailType": "html",
+        "message": "<p>Hi {{ $json.lead_name }},</p>\n\n<p>My name is Martine Davis, and I'm the owner of <strong>Indoor Environmental Testing Inc.</strong> — a specialized environmental inspection company serving the Nashville area (and Madison, WI) for the past several years.</p>\n\n<p>{{ $json.greeting }}, you already know that what's <em>inside</em> your property matters just as much as what's outside. But most people don't realize that indoor air can be 2–5x more polluted than outdoor air — even in brand-new construction.</p>\n\n<h3 style=\"color: #2E7D32;\">What we test for:</h3>\n<ul>\n  <li><strong>Mold &amp; Mycotoxins</strong> — especially critical in Nashville's humid climate</li>\n  <li><strong>Air Quality (VOCs, particulates, CO2)</strong> — from building materials, furniture, and HVAC systems</li>\n  <li><strong>EMF &amp; RF Radiation</strong> — from smart meters, cell towers, and wireless devices</li>\n  <li><strong>Chemical Contaminants</strong> — radon, pesticides, and off-gassing materials</li>\n</ul>\n\n<p>We use certified, laboratory-grade equipment and provide detailed reports with actionable recommendations — not just a list of numbers you can't interpret.</p>\n\n<h3 style=\"color: #2E7D32;\">Why Nashville clients choose IET:</h3>\n<p>Nashville's rapid growth means a lot of new construction, renovation, and older homes being repurposed. We've seen firsthand how water intrusion during building, humidity fluctuations, and new materials off-gassing can silently impact the health of families and employees.</p>\n\n<p style=\"text-align: center; margin: 30px 0;\">\n  <a href=\"YOUR_APPTOTAL_BOOKING_LINK\" style=\"background-color: #2E7D32; color: white; padding: 14px 28px; text-decoration: none; border-radius: 4px; font-size: 16px;\">Schedule a Free Consultation</a>\n</p>\n\n<p>If you have questions or want to talk through what type of testing might be right for your {{ $json.lead_type_label }}, feel free to reply to this email or call us directly.</p>\n\n<p>We look forward to helping you create a healthier indoor environment.</p>\n\n<p>Warmly,<br>\n<strong>Martine Davis</strong><br>\nIndoor Environmental Testing Inc.<br>\nNashville, TN | Madison, WI<br>\nPhone: YOUR_PHONE_NUMBER<br>\n<a href=\"mailto:martine@indoorenvironmentaltesting.com\">martine@indoorenvironmentaltesting.com</a><br>\n<a href=\"YOUR_WEBSITE_URL\">www.indoorenvironmentaltesting.com</a></p>\n\n<p style=\"color: #999; font-size: 11px;\">You're receiving this because you expressed interest in indoor environmental testing services. To unsubscribe, reply with \"unsubscribe\" in the subject line.</p>",
+        "options": {
+          "replyTo": "martine@indoorenvironmentaltesting.com"
+        }
+      },
+      "id": "eeeeeeee-1111-2222-3333-eeeeeeeeeeee",
+      "name": "Gmail - Day 0 Intro Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1200, 260],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail - IET Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_NASHVILLE_LEADS_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Nashville Leads",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "contacted",
+            "contacted_date": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": ["lead_email"],
+          "schema": [
+            { "id": "lead_email", "displayName": "lead_email", "required": true, "defaultMatch": true, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "status", "displayName": "status", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": false },
+            { "id": "contacted_date", "displayName": "contacted_date", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": false }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ffffffff-1111-2222-3333-ffffffffffff",
+      "name": "Google Sheets - Mark Contacted",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [1440, 260],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets - IET Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "unit": "days",
+        "amount": 3
+      },
+      "id": "gggggggg-1111-2222-3333-gggggggggggg",
+      "name": "Wait - 3 Days (Day 3 Check)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [1680, 260],
+      "webhookId": "wait-nashville-day3"
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_NASHVILLE_LEADS_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Nashville Leads",
+          "mode": "name"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "leftValue": "lead_email",
+              "rightValue": "={{ $json.lead_email }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "hhhhhhhh-1111-2222-3333-hhhhhhhhhhhh",
+      "name": "Google Sheets - Read Current Status (Day 3)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [1920, 260],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets - IET Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-not-responded-d3",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "responded",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "iiiiiiii-1111-2222-3333-iiiiiiiiiiii",
+      "name": "If - Not Responded Yet? (Day 3)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2160, 260]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.lead_email }}",
+        "subject": "What our Nashville clients are finding in their homes",
+        "emailType": "html",
+        "message": "<p>Hi {{ $json.lead_name }},</p>\n\n<p>I wanted to follow up with a quick note — and share a few real stories from Nashville-area clients we've worked with recently (all details anonymized, of course).</p>\n\n<p>These aren't horror stories. They're just eye-opening examples of what testing actually reveals:</p>\n\n<hr style=\"border: none; border-top: 1px solid #eee; margin: 20px 0;\">\n\n<h3 style=\"color: #2E7D32;\">Story 1: Mold After a \"Minor\" Leak</h3>\n<p>A family in Brentwood had a small roof leak repaired two years ago. The repair looked fine. But after their daughter started experiencing persistent respiratory issues, they called us. Our inspection found elevated mold spore counts in three rooms — traced to moisture trapped behind drywall during the original repair. Early intervention saved thousands in potential remediation costs and, more importantly, identified the source of their daughter's symptoms.</p>\n\n<hr style=\"border: none; border-top: 1px solid #eee; margin: 20px 0;\">\n\n<h3 style=\"color: #2E7D32;\">Story 2: VOCs in New Construction</h3>\n<p>A couple moved into a newly built home in Franklin and noticed headaches and fatigue within weeks. Our air quality test found significantly elevated levels of formaldehyde and other volatile organic compounds (VOCs) off-gassing from new flooring, cabinets, and paint. With targeted ventilation and a few product swaps, their air quality improved within 30 days.</p>\n\n<hr style=\"border: none; border-top: 1px solid #eee; margin: 20px 0;\">\n\n<h3 style=\"color: #2E7D32;\">Story 3: EMF Near a Cell Tower</h3>\n<p>A small business owner near a major intersection was concerned about a new cell tower installed 200 feet from their office. Our EMF testing provided a detailed map of RF exposure levels throughout the space — most were within safe ranges, but we identified two workstation areas with elevated readings and recommended simple shielding solutions.</p>\n\n<hr style=\"border: none; border-top: 1px solid #eee; margin: 20px 0;\">\n\n<p>The common thread? <strong>These issues were invisible until tested.</strong> No smell, no obvious sign — just subtle health impacts that took months to connect to their environment.</p>\n\n<p>If any of this resonates with your situation, I'd love to schedule a quick call or consultation to talk through what testing might make sense for your {{ $json.lead_type_label }}.</p>\n\n<p style=\"text-align: center; margin: 30px 0;\">\n  <a href=\"YOUR_APPTOTAL_BOOKING_LINK\" style=\"background-color: #2E7D32; color: white; padding: 14px 28px; text-decoration: none; border-radius: 4px; font-size: 16px;\">Book a Consultation</a>\n</p>\n\n<p>Warmly,<br>\n<strong>Martine Davis</strong><br>\nIndoor Environmental Testing Inc.<br>\nNashville, TN | Madison, WI</p>",
+        "options": {
+          "replyTo": "martine@indoorenvironmentaltesting.com"
+        }
+      },
+      "id": "jjjjjjjj-1111-2222-3333-jjjjjjjjjjjj",
+      "name": "Gmail - Day 3 Social Proof Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [2400, 160],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail - IET Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_NASHVILLE_LEADS_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Nashville Leads",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "follow_up_2_date": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": ["lead_email"],
+          "schema": [
+            { "id": "lead_email", "displayName": "lead_email", "required": true, "defaultMatch": true, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "follow_up_2_date", "displayName": "follow_up_2_date", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": false }
+          ]
+        },
+        "options": {}
+      },
+      "id": "kkkkkkkk-1111-2222-3333-kkkkkkkkkkkk",
+      "name": "Google Sheets - Update Follow Up 2 Date",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [2640, 160],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets - IET Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "unit": "days",
+        "amount": 4
+      },
+      "id": "llllllll-1111-2222-3333-llllllllllll",
+      "name": "Wait - 4 More Days (Day 7 Check)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [2880, 160],
+      "webhookId": "wait-nashville-day7"
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_NASHVILLE_LEADS_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Nashville Leads",
+          "mode": "name"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "leftValue": "lead_email",
+              "rightValue": "={{ $json.lead_email }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "mmmmmmmm-1111-2222-3333-mmmmmmmmmmmm",
+      "name": "Google Sheets - Read Current Status (Day 7)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [3120, 160],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets - IET Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-not-responded-d7",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "responded",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "nnnnnnnn-1111-2222-3333-nnnnnnnnnnnn",
+      "name": "If - Not Responded Yet? (Day 7)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [3360, 160]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.lead_email }}",
+        "subject": "One last thing about your home's air quality",
+        "emailType": "html",
+        "message": "<p>Hi {{ $json.lead_name }},</p>\n\n<p>I'll keep this brief — I know your inbox is busy.</p>\n\n<p>I wanted to share one fact that surprises almost every Nashville client we work with:</p>\n\n<blockquote style=\"border-left: 4px solid #2E7D32; padding: 12px 20px; margin: 20px 0; background: #f9f9f9; font-size: 16px;\">\n  <strong>Mold is the #1 hidden indoor air quality risk in Nashville homes</strong> — and it's almost entirely due to humidity.\n</blockquote>\n\n<p>Nashville's average indoor relative humidity regularly exceeds 60% during summer months. Mold begins growing at 55–60% humidity and can become a serious health concern within days of a water intrusion event — even a small one.</p>\n\n<p>The challenge is that mold often grows inside walls, under flooring, or in HVAC ducts where you can't see it. By the time you smell it, it's usually widespread.</p>\n\n<p><strong>A professional mold inspection takes about 2 hours</strong> and gives you a complete picture of your indoor environment — including air sampling and surface testing if needed.</p>\n\n<p>If you're not ready to book yet, I'm happy to answer any questions you have via email — no pressure, no sales pitch. Just straightforward information about what testing can and can't tell you.</p>\n\n<p>Reply to this email anytime, or use the link below if you'd like to schedule.</p>\n\n<p style=\"text-align: center; margin: 30px 0;\">\n  <a href=\"YOUR_APPTOTAL_BOOKING_LINK\" style=\"background-color: #2E7D32; color: white; padding: 14px 28px; text-decoration: none; border-radius: 4px; font-size: 16px;\">Schedule an Inspection</a>\n</p>\n\n<p>Thank you for your time, {{ $json.lead_name }}. Whether we work together now or down the road, I hope this information has been helpful.</p>\n\n<p>Take care,<br>\n<strong>Martine Davis</strong><br>\nIndoor Environmental Testing Inc.<br>\nNashville, TN | Madison, WI<br>\nPhone: YOUR_PHONE_NUMBER</p>\n\n<p style=\"color: #999; font-size: 11px;\">This is the final email in our Nashville outreach sequence. You won't hear from us again unless you reach out. To unsubscribe permanently, reply with \"unsubscribe.\"</p>",
+        "options": {
+          "replyTo": "martine@indoorenvironmentaltesting.com"
+        }
+      },
+      "id": "oooooooo-1111-2222-3333-oooooooooooo",
+      "name": "Gmail - Day 7 Final Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [3600, 60],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail - IET Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_NASHVILLE_LEADS_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Nashville Leads",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "sequence_complete",
+            "final_date": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": ["lead_email"],
+          "schema": [
+            { "id": "lead_email", "displayName": "lead_email", "required": true, "defaultMatch": true, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "status", "displayName": "status", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": false },
+            { "id": "final_date", "displayName": "final_date", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": false }
+          ]
+        },
+        "options": {}
+      },
+      "id": "pppppppp-1111-2222-3333-pppppppppppp",
+      "name": "Google Sheets - Mark Sequence Complete",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [3840, 60],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets - IET Account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "qqqqqqqq-1111-2222-3333-qqqqqqqqqqqq",
+      "name": "No Operation - Already Responded (Day 3)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [2400, 380]
+    },
+    {
+      "parameters": {},
+      "id": "rrrrrrrr-1111-2222-3333-rrrrrrrrrrrr",
+      "name": "No Operation - Already Responded (Day 7)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [3600, 280]
+    },
+    {
+      "parameters": {},
+      "id": "ssssssss-1111-2222-3333-ssssssssssss",
+      "name": "No Operation - Not a New Lead",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [960, 480]
+    }
+  ],
+  "connections": {
+    "Google Sheets - Watch Nashville Leads": {
+      "main": [
+        [
+          {
+            "node": "If - Status is New?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - Status is New?": {
+      "main": [
+        [
+          {
+            "node": "Set - Prepare Lead Variables",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation - Not a New Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Prepare Lead Variables": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Day 0 Intro Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail - Day 0 Intro Email": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets - Mark Contacted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets - Mark Contacted": {
+      "main": [
+        [
+          {
+            "node": "Wait - 3 Days (Day 3 Check)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait - 3 Days (Day 3 Check)": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets - Read Current Status (Day 3)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets - Read Current Status (Day 3)": {
+      "main": [
+        [
+          {
+            "node": "If - Not Responded Yet? (Day 3)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - Not Responded Yet? (Day 3)": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Day 3 Social Proof Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation - Already Responded (Day 3)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail - Day 3 Social Proof Email": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets - Update Follow Up 2 Date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets - Update Follow Up 2 Date": {
+      "main": [
+        [
+          {
+            "node": "Wait - 4 More Days (Day 7 Check)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait - 4 More Days (Day 7 Check)": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets - Read Current Status (Day 7)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets - Read Current Status (Day 7)": {
+      "main": [
+        [
+          {
+            "node": "If - Not Responded Yet? (Day 7)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - Not Responded Yet? (Day 7)": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Day 7 Final Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation - Already Responded (Day 7)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail - Day 7 Final Email": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets - Mark Sequence Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    { "name": "IET" },
+    { "name": "Nashville" },
+    { "name": "Lead Generation" },
+    { "name": "Email Drip" }
+  ]
+}

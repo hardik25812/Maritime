@@ -1,0 +1,431 @@
+{
+  "name": "IET - Missed Call Follow-Up (Retell AI)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "iet-retell-call-ended",
+        "responseMode": "immediatelyAfterLastNode",
+        "options": {}
+      },
+      "id": "b2c3d4e5-0002-0002-0002-000000000001",
+      "name": "Webhook - Retell AI Call Ended",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 360],
+      "notes": "Configure this webhook URL in Retell AI dashboard under 'Post-Call Webhook'. Retell sends: call_id, caller_phone, call_duration, transcript, call_summary, call_status (answered/missed/voicemail), collected_info (name, address, concern_type)"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "caller_phone",
+              "value": "={{ $json.body.caller_phone || $json.body.from_number }}"
+            },
+            {
+              "name": "call_duration",
+              "value": "={{ $json.body.call_duration || '0' }}"
+            },
+            {
+              "name": "transcript",
+              "value": "={{ $json.body.transcript || 'No transcript available' }}"
+            },
+            {
+              "name": "call_summary",
+              "value": "={{ $json.body.call_summary || 'No summary available' }}"
+            },
+            {
+              "name": "call_status",
+              "value": "={{ $json.body.call_status || 'unknown' }}"
+            },
+            {
+              "name": "caller_name",
+              "value": "={{ $json.body.collected_info?.name || $json.body.caller_name || 'Unknown Caller' }}"
+            },
+            {
+              "name": "caller_address",
+              "value": "={{ $json.body.collected_info?.address || 'Not provided' }}"
+            },
+            {
+              "name": "concern_type",
+              "value": "={{ $json.body.collected_info?.concern_type || 'Not specified' }}"
+            },
+            {
+              "name": "call_id",
+              "value": "={{ $json.body.call_id }}"
+            },
+            {
+              "name": "booking_link",
+              "value": "https://app.apptotal.com/YOUR_BOOKING_LINK"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{ new Date().toISOString() }}"
+            }
+          ],
+          "number": [
+            {
+              "name": "call_duration_num",
+              "value": "={{ parseInt($json.body.call_duration || '0') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b2c3d4e5-0002-0002-0002-000000000002",
+      "name": "Set - Normalize Call Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [460, 360],
+      "notes": "Normalizes Retell AI payload fields. Retell field names may vary by version — adjust mapping if needed."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-call-answered",
+              "leftValue": "={{ $json.call_status }}",
+              "rightValue": "answered",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b2c3d4e5-0002-0002-0002-000000000003",
+      "name": "IF - Was Call Answered?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 360],
+      "notes": "Routes answered calls (true/output 0) vs missed/voicemail calls (false/output 1)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-info-collected",
+              "leftValue": "={{ $json.caller_name }}",
+              "rightValue": "Unknown Caller",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b2c3d4e5-0002-0002-0002-000000000004",
+      "name": "IF - Was Info Collected?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 200],
+      "notes": "Checks if Retell AI collected caller info (name). If yes, sends confirmation SMS; if no, sends generic follow-up."
+    },
+    {
+      "parameters": {
+        "from": "+1XXXXXXXXXX",
+        "to": "={{ $json.caller_phone }}",
+        "message": "=Hi {{ $json.caller_name }}! Thanks for calling Indoor Environmental Testing. We've noted your inquiry about {{ $json.concern_type }} at {{ $json.caller_address }}. Our team will follow up with you shortly to get you scheduled. Questions? Call us at (XXX) XXX-XXXX or book directly: {{ $json.booking_link }}",
+        "options": {}
+      },
+      "id": "b2c3d4e5-0002-0002-0002-000000000005",
+      "name": "Twilio - SMS Confirmation (Info Collected)",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [1120, 120],
+      "credentials": {
+        "twilioApi": {
+          "id": "TWILIO_CREDENTIAL_ID",
+          "name": "Twilio Account - IET"
+        }
+      },
+      "notes": "Sent when call was answered AND info was collected. Personalizes with name, concern type, and address."
+    },
+    {
+      "parameters": {
+        "from": "+1XXXXXXXXXX",
+        "to": "={{ $json.caller_phone }}",
+        "message": "=Hi! Thanks for calling Indoor Environmental Testing. We'd love to help — our team will reach out to you shortly. For faster service, you can book directly at: {{ $json.booking_link }} or call us back at (XXX) XXX-XXXX. — IET Team",
+        "options": {}
+      },
+      "id": "b2c3d4e5-0002-0002-0002-000000000006",
+      "name": "Twilio - SMS Confirmation (No Info)",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [1120, 280],
+      "credentials": {
+        "twilioApi": {
+          "id": "TWILIO_CREDENTIAL_ID",
+          "name": "Twilio Account - IET"
+        }
+      },
+      "notes": "Sent when call was answered but no info was collected from caller."
+    },
+    {
+      "parameters": {
+        "from": "+1XXXXXXXXXX",
+        "to": "={{ $json.caller_phone }}",
+        "message": "=Hi, we missed your call at Indoor Environmental Testing! We'll call you back within the hour. For faster service, you can book directly here: {{ $json.booking_link }} — The IET Team | (XXX) XXX-XXXX",
+        "options": {}
+      },
+      "id": "b2c3d4e5-0002-0002-0002-000000000007",
+      "name": "Twilio - SMS Missed Call Follow-Up",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [900, 520],
+      "credentials": {
+        "twilioApi": {
+          "id": "TWILIO_CREDENTIAL_ID",
+          "name": "Twilio Account - IET"
+        }
+      },
+      "notes": "Sent IMMEDIATELY when call was missed or ended without booking. Replace +1XXXXXXXXXX with IET Twilio number."
+    },
+    {
+      "parameters": {
+        "sendTo": "martine@indoorenvironmentaltesting.com",
+        "subject": "=📞 {{ $('Set - Normalize Call Data').item.json.call_status == 'answered' ? 'Answered Call' : '⚠️ MISSED CALL' }} - {{ $('Set - Normalize Call Data').item.json.caller_name }} | {{ $('Set - Normalize Call Data').item.json.caller_phone }}",
+        "emailType": "html",
+        "message": "=<html><body style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;\">\n<h2 style=\"color: {{ $('Set - Normalize Call Data').item.json.call_status == 'answered' ? '#2c6e49' : '#c0392b' }};\">{{ $('Set - Normalize Call Data').item.json.call_status == 'answered' ? 'Answered Call Summary' : 'MISSED CALL ALERT' }}</h2>\n\n<table style=\"width: 100%; border-collapse: collapse; margin-bottom: 20px;\">\n  <tr style=\"background-color: #f5f5f5;\"><td style=\"padding: 8px; border: 1px solid #ddd; font-weight: bold;\">Caller Phone</td><td style=\"padding: 8px; border: 1px solid #ddd;\">{{ $('Set - Normalize Call Data').item.json.caller_phone }}</td></tr>\n  <tr><td style=\"padding: 8px; border: 1px solid #ddd; font-weight: bold;\">Caller Name</td><td style=\"padding: 8px; border: 1px solid #ddd;\">{{ $('Set - Normalize Call Data').item.json.caller_name }}</td></tr>\n  <tr style=\"background-color: #f5f5f5;\"><td style=\"padding: 8px; border: 1px solid #ddd; font-weight: bold;\">Address</td><td style=\"padding: 8px; border: 1px solid #ddd;\">{{ $('Set - Normalize Call Data').item.json.caller_address }}</td></tr>\n  <tr><td style=\"padding: 8px; border: 1px solid #ddd; font-weight: bold;\">Concern Type</td><td style=\"padding: 8px; border: 1px solid #ddd;\">{{ $('Set - Normalize Call Data').item.json.concern_type }}</td></tr>\n  <tr style=\"background-color: #f5f5f5;\"><td style=\"padding: 8px; border: 1px solid #ddd; font-weight: bold;\">Call Duration</td><td style=\"padding: 8px; border: 1px solid #ddd;\">{{ $('Set - Normalize Call Data').item.json.call_duration }} seconds</td></tr>\n  <tr><td style=\"padding: 8px; border: 1px solid #ddd; font-weight: bold;\">Call Status</td><td style=\"padding: 8px; border: 1px solid #ddd;\">{{ $('Set - Normalize Call Data').item.json.call_status }}</td></tr>\n  <tr style=\"background-color: #f5f5f5;\"><td style=\"padding: 8px; border: 1px solid #ddd; font-weight: bold;\">Timestamp</td><td style=\"padding: 8px; border: 1px solid #ddd;\">{{ $('Set - Normalize Call Data').item.json.timestamp }}</td></tr>\n</table>\n\n<h3 style=\"color: #2c6e49;\">Call Summary</h3>\n<p style=\"background-color: #f9f9f9; padding: 12px; border-left: 4px solid #2c6e49;\">{{ $('Set - Normalize Call Data').item.json.call_summary }}</p>\n\n<h3 style=\"color: #2c6e49;\">Full Transcript</h3>\n<p style=\"background-color: #f9f9f9; padding: 12px; border-left: 4px solid #2c6e49; white-space: pre-wrap; font-size: 13px;\">{{ $('Set - Normalize Call Data').item.json.transcript }}</p>\n\n<p style=\"color: #999; font-size: 12px;\">Call ID: {{ $('Set - Normalize Call Data').item.json.call_id }} | Generated by IET n8n Automation</p>\n</body></html>",
+        "options": {
+          "replyTo": "martine@indoorenvironmentaltesting.com"
+        }
+      },
+      "id": "b2c3d4e5-0002-0002-0002-000000000008",
+      "name": "Gmail - Internal Notification to Martine",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1340, 360],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "GMAIL_CREDENTIAL_ID",
+          "name": "Gmail OAuth2 - IET"
+        }
+      },
+      "notes": "Sends full call details, summary, and transcript to Martine. Color-coded red for missed calls, green for answered."
+    },
+    {
+      "parameters": {
+        "from": "+1XXXXXXXXXX",
+        "to": "+1MARTINE_PHONE_NUMBER",
+        "message": "=IET Alert: {{ $('Set - Normalize Call Data').item.json.call_status == 'answered' ? 'Call answered' : 'MISSED CALL' }} from {{ $('Set - Normalize Call Data').item.json.caller_phone }}. Caller: {{ $('Set - Normalize Call Data').item.json.caller_name }}. Concern: {{ $('Set - Normalize Call Data').item.json.concern_type }}. Check email for full details.",
+        "options": {}
+      },
+      "id": "b2c3d4e5-0002-0002-0002-000000000009",
+      "name": "Twilio - SMS Alert to Martine",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [1560, 360],
+      "credentials": {
+        "twilioApi": {
+          "id": "TWILIO_CREDENTIAL_ID",
+          "name": "Twilio Account - IET"
+        }
+      },
+      "notes": "CONFIGURE: Replace +1MARTINE_PHONE_NUMBER with Martine's actual mobile number (e.g., +16085550123)"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "value": "YOUR_GOOGLE_SHEETS_DOCUMENT_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "value": "Call Log",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $('Set - Normalize Call Data').item.json.timestamp }}",
+            "Call ID": "={{ $('Set - Normalize Call Data').item.json.call_id }}",
+            "Caller Phone": "={{ $('Set - Normalize Call Data').item.json.caller_phone }}",
+            "Caller Name": "={{ $('Set - Normalize Call Data').item.json.caller_name }}",
+            "Caller Address": "={{ $('Set - Normalize Call Data').item.json.caller_address }}",
+            "Concern Type": "={{ $('Set - Normalize Call Data').item.json.concern_type }}",
+            "Call Status": "={{ $('Set - Normalize Call Data').item.json.call_status }}",
+            "Call Duration (sec)": "={{ $('Set - Normalize Call Data').item.json.call_duration }}",
+            "Call Summary": "={{ $('Set - Normalize Call Data').item.json.call_summary }}",
+            "Follow-Up SMS Sent": "Yes",
+            "Internal Notification Sent": "Yes"
+          }
+        },
+        "options": {}
+      },
+      "id": "b2c3d4e5-0002-0002-0002-000000000010",
+      "name": "Google Sheets - Log Call",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [1780, 360],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GSHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2 - IET"
+        }
+      },
+      "notes": "CONFIGURE: Replace YOUR_GOOGLE_SHEETS_DOCUMENT_ID with actual Sheet ID. Sheet must have a tab named 'Call Log'."
+    }
+  ],
+  "connections": {
+    "Webhook - Retell AI Call Ended": {
+      "main": [
+        [
+          {
+            "node": "Set - Normalize Call Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Normalize Call Data": {
+      "main": [
+        [
+          {
+            "node": "IF - Was Call Answered?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Was Call Answered?": {
+      "main": [
+        [
+          {
+            "node": "IF - Was Info Collected?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Twilio - SMS Missed Call Follow-Up",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Was Info Collected?": {
+      "main": [
+        [
+          {
+            "node": "Twilio - SMS Confirmation (Info Collected)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Twilio - SMS Confirmation (No Info)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twilio - SMS Confirmation (Info Collected)": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Internal Notification to Martine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twilio - SMS Confirmation (No Info)": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Internal Notification to Martine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twilio - SMS Missed Call Follow-Up": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Internal Notification to Martine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail - Internal Notification to Martine": {
+      "main": [
+        [
+          {
+            "node": "Twilio - SMS Alert to Martine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twilio - SMS Alert to Martine": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets - Log Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "IET",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "Calls",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "Retell AI",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2026-03-31T00:00:00.000Z",
+  "id": "workflow-iet-002"
+}
