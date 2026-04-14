@@ -11,7 +11,7 @@ type Props = {
 
 export default function TopBar({ title, subtitle, onRefresh, refreshing }: Props) {
   return (
-    <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-slate-100 shrink-0">
+    <div className="flex items-center justify-between pl-14 pr-4 md:px-6 py-4 bg-white border-b border-slate-100 shrink-0">
       <div>
         <h1 className="text-lg font-semibold text-[#1e2a1e]">{title}</h1>
         {subtitle && <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>}
@@ -31,7 +31,7 @@ export default function TopBar({ title, subtitle, onRefresh, refreshing }: Props
           <Bell size={18} />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
         </button>
-        <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+        <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-slate-200">
           <div className="w-8 h-8 rounded-full bg-[#3B5323] flex items-center justify-center text-white text-xs font-bold">
             M
           </div>

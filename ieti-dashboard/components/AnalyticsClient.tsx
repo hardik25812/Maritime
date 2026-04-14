@@ -88,7 +88,7 @@ export default function AnalyticsClient() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <TopBar title="Analytics" subtitle={`${filtered.length} calls in last ${range} days`} onRefresh={() => fetchCalls(true)} refreshing={refreshing} />
-      <div className="flex-1 overflow-y-auto p-6 scrollbar-thin space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 scrollbar-thin space-y-4 md:space-y-6">
 
         <div className="flex gap-2">
           {[7, 30, 90].map(d => (
@@ -112,7 +112,7 @@ export default function AnalyticsClient() {
           </ResponsiveContainer>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Lead pie */}
           <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-5">
             <h2 className="text-sm font-semibold text-[#1e2a1e] mb-4">Lead Quality</h2>

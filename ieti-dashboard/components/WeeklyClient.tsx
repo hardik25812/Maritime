@@ -44,7 +44,7 @@ export default function WeeklyClient() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <TopBar title="Weekly Report" subtitle="Last 7 days performance summary" />
-      <div className="flex-1 overflow-y-auto p-6 scrollbar-thin space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 scrollbar-thin space-y-4 md:space-y-6">
 
         {/* Action buttons */}
         <div className="flex gap-3">
@@ -57,18 +57,18 @@ export default function WeeklyClient() {
         {/* Report card */}
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden print:shadow-none">
           {/* Header */}
-          <div className="bg-[#1e2a1e] px-8 py-6">
-            <div className="flex items-center justify-between">
+          <div className="bg-[#1e2a1e] px-5 md:px-8 py-5 md:py-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
               <div>
-                <h2 className="text-lg font-bold text-white">Indoor Environmental Testing Inc.</h2>
+                <h2 className="text-base md:text-lg font-bold text-white">Indoor Environmental Testing Inc.</h2>
                 <p className="text-[#8B7D3C] text-sm">Weekly QC Report — AI Receptionist</p>
               </div>
-              <div className="text-right">
+              <div className="sm:text-right">
                 <p className="text-xs text-slate-400">Week ending</p>
                 <p className="text-sm text-white font-medium">{new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-6 mt-6">
+            <div className="grid grid-cols-3 gap-4 md:gap-6 mt-5 md:mt-6">
               <div>
                 <p className="text-3xl font-bold text-white">{total}</p>
                 <p className="text-xs text-slate-400">Total Calls</p>
@@ -85,7 +85,7 @@ export default function WeeklyClient() {
           </div>
 
           {/* Body */}
-          <div className="px-8 py-6 space-y-6">
+          <div className="px-4 md:px-8 py-5 md:py-6 space-y-5 md:space-y-6">
             {/* Stats grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-center">
               <div className="p-4 bg-slate-50 rounded-lg">
@@ -123,7 +123,7 @@ export default function WeeklyClient() {
             {high.length > 0 && (
               <div>
                 <h3 className="text-sm font-semibold text-[#1e2a1e] mb-3">High-Intent Leads (Call Back)</h3>
-                <div className="border rounded-lg overflow-hidden">
+                <div className="border rounded-lg overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="bg-slate-50">
                       <tr>

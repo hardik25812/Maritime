@@ -77,9 +77,9 @@ export default function CallsClient() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <TopBar title="Call Logs" subtitle={`${filtered.length} of ${calls.length} calls`} onRefresh={() => fetchCalls(true)} refreshing={refreshing} />
-      <div className="flex-1 overflow-y-auto p-6 scrollbar-thin space-y-4">
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="relative flex-1 min-w-[200px]">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 scrollbar-thin space-y-4">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3 md:flex-wrap">
+          <div className="relative w-full md:flex-1 md:min-w-[200px]">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               value={search}

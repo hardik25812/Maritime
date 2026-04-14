@@ -18,13 +18,13 @@ export default function CallRow({ call }: { call: CallLog }) {
     <div className="border border-slate-100 rounded-xl bg-white mb-2 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full text-left px-4 py-3 flex items-center gap-3"
+        className="w-full text-left px-3 md:px-4 py-3 flex items-center gap-2 md:gap-3"
       >
-        <div className="w-9 h-9 rounded-full bg-[#3B5323]/10 flex items-center justify-center shrink-0">
-          <User size={16} className="text-[#3B5323]" />
+        <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-[#3B5323]/10 flex items-center justify-center shrink-0">
+          <User size={15} className="text-[#3B5323]" />
         </div>
 
-        <div className="w-44 shrink-0">
+        <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-[#1e2a1e] truncate">
             {call.caller_name || 'Unknown Caller'}
           </p>
@@ -34,14 +34,14 @@ export default function CallRow({ call }: { call: CallLog }) {
           </p>
         </div>
 
-        <div className="flex-1 min-w-0">
+        <div className="hidden sm:block flex-1 min-w-0">
           <p className="text-xs font-medium text-slate-700 truncate">
             {getConcernLabel(call.concern_type)}
           </p>
           <p className="text-[11px] text-slate-400 truncate">{formatDate(call.received_at)}</p>
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1 shrink-0">
           <Badge
             label={call.lead_score || 'medium'}
             className={getLeadScoreColor(call.lead_score)}
@@ -49,26 +49,26 @@ export default function CallRow({ call }: { call: CallLog }) {
           {call.urgency_flag !== 'routine' && (
             <Badge
               label={call.urgency_flag}
-              className={getUrgencyColor(call.urgency_flag)}
+              className={cn(getUrgencyColor(call.urgency_flag), 'hidden sm:inline-flex')}
             />
           )}
         </div>
 
-        <div className="w-16 text-right shrink-0">
+        <div className="hidden md:block w-14 text-right shrink-0">
           <p className="text-xs font-medium text-slate-600 flex items-center justify-end gap-1">
             <Clock size={10} />
             {formatDuration(call.call_duration_seconds)}
           </p>
         </div>
 
-        <div className="w-5 shrink-0 text-slate-400">
-          {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        <div className="w-4 shrink-0 text-slate-400">
+          {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
         </div>
       </button>
 
       {expanded && (
         <div className="px-4 pb-4 border-t border-slate-50 pt-3 bg-slate-50/50">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-3">
               <div>
                 <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Call Summary</p>

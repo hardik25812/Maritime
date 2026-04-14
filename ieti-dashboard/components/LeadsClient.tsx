@@ -43,7 +43,7 @@ export default function LeadsClient() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <TopBar title="Lead Tracker" subtitle="Calls with intake collected" onRefresh={() => fetchCalls(true)} refreshing={refreshing} />
-      <div className="flex-1 overflow-y-auto p-6 scrollbar-thin space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 scrollbar-thin space-y-4">
         <div className="flex gap-2">
           {([['high', high.length], ['medium', medium.length], ['low', low.length]] as const).map(([t, count]) => (
             <button key={t} onClick={() => setTab(t)}

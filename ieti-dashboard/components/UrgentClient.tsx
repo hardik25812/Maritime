@@ -49,10 +49,10 @@ export default function UrgentClient() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <TopBar title="Urgent Flags" subtitle={`${urgentCalls.length + humanCalls.length + missedCalls.length} items need attention`} onRefresh={() => fetchCalls(true)} refreshing={refreshing} />
-      <div className="flex-1 overflow-y-auto p-6 scrollbar-thin space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 scrollbar-thin space-y-5 md:space-y-6">
 
         {(urgentCalls.length > 0 || missedCalls.length > 0) && (
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2 md:gap-3">
             <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
               <p className="text-2xl font-bold text-red-600">{urgentCalls.length}</p>
               <p className="text-xs text-red-700 mt-0.5">Urgent / Emergency</p>

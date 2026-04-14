@@ -105,9 +105,9 @@ export default function DashboardClient() {
         onRefresh={() => fetchCalls(true)}
         refreshing={refreshing}
       />
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6 scrollbar-thin">
 
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <StatCard
             title="Total Calls"
             value={total}
@@ -142,7 +142,7 @@ export default function DashboardClient() {
           />
         </div>
 
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <StatCard
             title="Avg Call Duration"
             value={`${avgDur}s`}
@@ -175,7 +175,7 @@ export default function DashboardClient() {
           />
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-3 md:gap-4">
           <div className="xl:col-span-2 bg-white rounded-xl border border-slate-100 shadow-sm p-5">
             <h2 className="text-sm font-semibold text-[#1e2a1e] mb-4">Calls — Last 7 Days</h2>
             <ResponsiveContainer width="100%" height={200}>

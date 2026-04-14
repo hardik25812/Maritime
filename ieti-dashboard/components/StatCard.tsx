@@ -23,7 +23,7 @@ export default function StatCard({
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">{title}</p>
-          <p className="mt-1.5 text-3xl font-bold text-[#1e2a1e]">{value}</p>
+          <p className="mt-1.5 text-2xl md:text-3xl font-bold text-[#1e2a1e]">{value}</p>
           {subtitle && <p className="mt-0.5 text-xs text-slate-400">{subtitle}</p>}
           {trend && (
             <p className={cn('mt-1.5 text-xs font-medium', trend.value >= 0 ? 'text-emerald-600' : 'text-red-500')}>
