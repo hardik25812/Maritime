@@ -1,0 +1,210 @@
+{
+  "name": "SFSBI P1 - Retell Call Handler",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sfsbi-retell-call-ended",
+        "options": {},
+        "multipleMethods": false
+      },
+      "id": "s1000001-0000-0000-0000-000000000001",
+      "name": "Webhook - Retell call_ended",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [240, 304],
+      "webhookId": "sfsbi-call-ended-001"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\n\nconst vars = d.retell_llm_dynamic_variables || {};\nconst analysis = d.call_analysis || {};\nconst customData = analysis.custom_analysis_data || {};\n\nconst callerName = vars.caller_name || '';\nconst callerPhone = vars.caller_phone || d.from_number || '';\nconst serviceInterest = vars.service_interest || customData.service_interest || 'unknown';\nconst howHeard = vars.how_heard_about_us || '';\nconst languageUsed = vars.language_used || customData.language_used || 'english';\nconst urgencyFlag = vars.urgency_flag || customData.urgency_level || 'routine';\nconst callType = vars.call_type || 'new_inquiry';\nconst afterHours = vars.after_hours === 'true' || vars.after_hours === true;\nconst isSpam = vars.is_spam === 'true' || vars.is_spam === true;\nconst wantsHuman = vars.wants_human === 'true' || vars.wants_human === true;\nconst bmiMentioned = vars.bmi_mentioned || '';\nconst intakeCollected = callerName.length > 0 && callerPhone.length > 0;\n\nconst startTs = parseInt(d.start_timestamp) || 0;\nconst endTs = parseInt(d.end_timestamp) || 0;\nconst durationSecs = startTs > 0 && endTs > 0 ? Math.round((endTs - startTs) / 1000) : 0;\n\nconst leadScore = customData.lead_score || 'medium';\nconst callOutcome = customData.call_outcome || (intakeCollected ? 'intake_collected' : 'question_answered_only');\nconst callSummary = customData.call_summary || analysis.call_summary || '';\n\nconst out = {\n  received_at: new Date().toISOString(),\n  call_id: d.call_id || 'unknown-' + Date.now(),\n  call_status: d.call_status || '',\n  caller_name: callerName,\n  caller_phone: callerPhone,\n  service_interest: serviceInterest,\n  how_heard: howHeard,\n  language_used: languageUsed,\n  urgency_flag: urgencyFlag,\n  call_type: callType,\n  after_hours: afterHours,\n  is_spam: isSpam,\n  wants_human: wantsHuman,\n  bmi_mentioned: bmiMentioned,\n  intake_collected: intakeCollected,\n  lead_score: leadScore,\n  call_outcome: callOutcome,\n  call_summary: callSummary,\n  user_sentiment: analysis.user_sentiment || 'unknown',\n  call_duration_seconds: durationSecs,\n  recording_url: d.recording_url || '',\n  transcript: (d.transcript || '').substring(0, 3000)\n};\nreturn [{ json: out }];",
+        "language": "javaScript",
+        "mode": "runOnceForAllItems"
+      },
+      "id": "s1000002-0000-0000-0000-000000000002",
+      "name": "Code - Parse Retell Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 304]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "spam-check",
+              "leftValue": "={{ $json.is_spam }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "s1000003-0000-0000-0000-000000000003",
+      "name": "IF - Spam Filter",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [680, 304]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/SFSBI_GOOGLE_SHEET_ID/values/Call%20Log:append",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "valueInputOption", "value": "USER_ENTERED" },
+            { "name": "insertDataOption", "value": "INSERT_ROWS" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: [[ $json.received_at, $json.call_id, $json.caller_name, $json.caller_phone, $json.service_interest, $json.how_heard, $json.language_used, $json.lead_score, $json.urgency_flag, $json.call_type, $json.after_hours, $json.intake_collected, $json.call_duration_seconds, $json.call_status, $json.call_outcome, $json.user_sentiment, $json.wants_human, $json.bmi_mentioned, $json.call_summary, $json.recording_url ]] }) }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "id": "s1000004-0000-0000-0000-000000000004",
+      "name": "Google Sheets - Log Call",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [920, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "urgent-check",
+              "leftValue": "={{ $json.urgency_flag }}",
+              "rightValue": "urgent",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "or"
+        }
+      },
+      "id": "s1000005-0000-0000-0000-000000000005",
+      "name": "IF - Urgent or Human Requested",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1140, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.twilio.com/2010-04-01/Accounts/TWILIO_ACCOUNT_SID/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "To", "value": "SHEENA_PHONE_NUMBER" },
+            { "name": "From", "value": "TWILIO_PHONE_NUMBER" },
+            { "name": "Body", "value": "={{ $json.urgency_flag === 'urgent' ? '🚨 URGENT' : '📞 New Lead' }}: {{ $json.caller_name }} ({{ $json.caller_phone }})\nService: {{ $json.service_interest }}\nLead: {{ $json.lead_score }}\nLang: {{ $json.language_used }}\nSummary: {{ $json.call_summary }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "s1000006-0000-0000-0000-000000000006",
+      "name": "SMS - Alert Sheena (Urgent)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1380, 100]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "high-lead-check",
+              "leftValue": "={{ $json.lead_score }}",
+              "rightValue": "high",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "s1000007-0000-0000-0000-000000000007",
+      "name": "IF - High Lead Score",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1380, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.twilio.com/2010-04-01/Accounts/TWILIO_ACCOUNT_SID/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "To", "value": "SHEENA_PHONE_NUMBER" },
+            { "name": "From", "value": "TWILIO_PHONE_NUMBER" },
+            { "name": "Body", "value": "⭐ HIGH-INTENT LEAD: {{ $json.caller_name }} ({{ $json.caller_phone }})\nInterested in: {{ $json.service_interest }}\nLang: {{ $json.language_used }}\n{{ $json.bmi_mentioned ? 'BMI: ' + $json.bmi_mentioned : '' }}\nSummary: {{ $json.call_summary }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "s1000008-0000-0000-0000-000000000008",
+      "name": "SMS - Alert Sheena (High Lead)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1620, 200]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "skip", "name": "status", "value": "spam_filtered", "type": "string" }
+          ]
+        }
+      },
+      "id": "s1000009-0000-0000-0000-000000000009",
+      "name": "Set - Spam Skipped",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [920, 450]
+    }
+  ],
+  "connections": {
+    "Webhook - Retell call_ended": {
+      "main": [[{ "node": "Code - Parse Retell Payload", "type": "main", "index": 0 }]]
+    },
+    "Code - Parse Retell Payload": {
+      "main": [[{ "node": "IF - Spam Filter", "type": "main", "index": 0 }]]
+    },
+    "IF - Spam Filter": {
+      "main": [
+        [{ "node": "Set - Spam Skipped", "type": "main", "index": 0 }],
+        [{ "node": "Google Sheets - Log Call", "type": "main", "index": 0 }]
+      ]
+    },
+    "Google Sheets - Log Call": {
+      "main": [[{ "node": "IF - Urgent or Human Requested", "type": "main", "index": 0 }]]
+    },
+    "IF - Urgent or Human Requested": {
+      "main": [
+        [{ "node": "SMS - Alert Sheena (Urgent)", "type": "main", "index": 0 }],
+        [{ "node": "IF - High Lead Score", "type": "main", "index": 0 }]
+      ]
+    },
+    "IF - High Lead Score": {
+      "main": [
+        [{ "node": "SMS - Alert Sheena (High Lead)", "type": "main", "index": 0 }],
+        []
+      ]
+    }
+  },
+  "settings": { "executionOrder": "v1", "saveManualExecutions": true }
+}

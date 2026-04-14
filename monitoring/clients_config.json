@@ -1,0 +1,44 @@
+{
+  "clients": [
+    {
+      "name": "Maritime",
+      "n8n": {
+        "tag": "client:maritime",
+        "prefix": "Maritime - "
+      },
+      "retell": {
+        "agent_id": "agent_maritime_xxx"
+      },
+      "telegram_channel": "8546830330",
+      "enabled": true
+    },
+    {
+      "name": "ACME Corp",
+      "n8n": {
+        "tag": "client:acme",
+        "prefix": "ACME - "
+      },
+      "retell": {
+        "agent_id": "agent_acme_xxx"
+      },
+      "telegram_channel": "8546830330",
+      "enabled": true
+    },
+    {
+      "name": "TechStart",
+      "n8n": {
+        "tag": "client:techstart",
+        "prefix": "TechStart - "
+      },
+      "retell": {
+        "agent_id": "agent_techstart_xxx"
+      },
+      "telegram_channel": "8546830330",
+      "enabled": false
+    }
+  ],
+  "global": {
+    "telegram_channel": "8546830330",
+    "monitor_all_clients": true
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -H \"Authorization: Bearer key_70acf8e731936d5abafc26e9d116\" https://api.retellai.com/list-agents)",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s -H 'Authorization: Bearer key_70acf8e731936d5abafc26e9d116' https://api.retellai.com/list-agents)",
+      "Bash(curl -s -H \"Authorization: Bearer key_70acf8e731936d5abafc26e9d116\" https://api.retellai.com/list-phone-numbers)",
+      "Bash(curl -s -H 'Authorization: Bearer key_70acf8e731936d5abafc26e9d116' https://api.retellai.com/list-phone-numbers)",
+      "Bash(curl -s -H \"Authorization: Bearer key_70acf8e731936d5abafc26e9d116\" \"https://api.retellai.com/list-calls?limit=5\")",
+      "Bash(curl -s -H \"Authorization: Bearer key_70acf8e731936d5abafc26e9d116\" \"https://api.retellai.com/list-calls\")",
+      "Bash(curl -s -X POST -H \"Authorization: Bearer key_70acf8e731936d5abafc26e9d116\" -H \"Content-Type: application/json\" -d '{\"\"\"\"limit\"\"\"\": 5}' \"https://api.retellai.com/v2/list-calls\")",
+      "Bash(curl -s -X PATCH -H \"Authorization: Bearer key_70acf8e731936d5abafc26e9d116\" -H \"Content-Type: application/json\" -d '{\"\"\"\"voice_speed\"\"\"\": 0.85}' \"https://api.retellai.com/update-agent/agent_afd4a14f40260369e259646da9\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(''''voice_speed:'''', d.get\\(''''voice_speed''''\\)\\)\")"
+    ]
+  }
+}

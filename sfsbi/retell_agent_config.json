@@ -1,0 +1,164 @@
+{
+  "agent_name": "SFSBI - AI Receptionist",
+  "voice_id": "11labs-Dorothy",
+  "voice_speed": 1.0,
+  "voice_temperature": 1.0,
+  "enable_dynamic_voice_speed": true,
+  "language": "multi",
+  "responsiveness": 0.9,
+  "enable_dynamic_responsiveness": true,
+  "interruption_sensitivity": 0.8,
+  "enable_backchannel": true,
+  "backchannel_frequency": 0.5,
+  "backchannel_words": ["mm-hmm", "yeah", "right", "got it", "sure"],
+  "ambient_sound": "call-center",
+  "ambient_sound_volume": 0.4,
+  "end_call_after_silence_ms": 30000,
+  "max_call_duration_ms": 600000,
+  "normalize_for_speech": true,
+  "reminder_trigger_ms": 10000,
+  "reminder_max_count": 2,
+  "handbook_config": {
+    "natural_filler_words": true,
+    "high_empathy": true,
+    "echo_verification": true,
+    "speech_normalization": true,
+    "smart_matching": true,
+    "default_personality": true,
+    "scope_boundaries": true,
+    "ai_disclosure": true,
+    "nato_phonetic_alphabet": false
+  },
+  "boosted_keywords": [
+    "SFSBI", "South Florida Surgery", "Bariatric", "Valladares",
+    "Sheena", "Acosta", "GLP-1", "CoolSculpting", "gastric sleeve",
+    "gastric bypass", "Orbera", "Allurion", "Lap-Band", "Apollo ESG",
+    "phentermine", "TORe", "BBL", "liposuction", "tummy tuck",
+    "concierge", "telehealth", "MIC", "B12", "dietitian"
+  ],
+  "pronunciation_dictionary": [
+    {"word": "SFSBI", "alphabet": "ipa", "phoneme": "ˌɛs ɛf ˌɛs biː aɪ"},
+    {"word": "Valladares", "alphabet": "ipa", "phoneme": "ˌvɑːjɑːˈdɑːɹɛs"},
+    {"word": "Orbera", "alphabet": "ipa", "phoneme": "ɔːɹˈbɛɹə"},
+    {"word": "Allurion", "alphabet": "ipa", "phoneme": "əˈlʊɹiːɒn"},
+    {"word": "Sheena", "alphabet": "ipa", "phoneme": "ˈʃiːnə"},
+    {"word": "Acosta", "alphabet": "ipa", "phoneme": "əˈkɒstə"},
+    {"word": "TORe", "alphabet": "ipa", "phoneme": "tɔːɹ"},
+    {"word": "Tebra", "alphabet": "ipa", "phoneme": "ˈtɛbɹə"},
+    {"word": "gastroplasty", "alphabet": "ipa", "phoneme": "ˈɡæstɹoʊˌplæsti"},
+    {"word": "brachioplasty", "alphabet": "ipa", "phoneme": "ˈbɹeɪkioʊˌplæsti"},
+    {"word": "blepharoplasty", "alphabet": "ipa", "phoneme": "ˈblɛfəɹoʊˌplæsti"}
+  ],
+  "response_engine": {
+    "type": "retell-llm",
+    "llm_websocket_url": null
+  },
+  "llm": {
+    "model": "gpt-4o",
+    "model_temperature": 0.3,
+    "system_prompt": "You are concise. When in doubt, say less not more.\n\n## Identity\nYou are the AI receptionist for South Florida Surgery, Bariatric and Cosmetic Institute in Miami, Florida. Dr. Eric Valladares is the physician and owner. Sheena Acosta is the office coordinator. You answer calls, handle questions about our services, and collect caller info so Sheena can follow up. You speak English and Spanish — if a caller speaks Spanish, switch to fluent Spanish immediately.\n\n## Speaking Rules\n- Keep ALL responses to 2-3 sentences maximum. No exceptions.\n- Ask ONE question at a time. Never stack questions.\n- Use contractions naturally — I'm, we'll, don't, can't, won't\n- Say numbers in spoken form — \"four hundred dollars\" not \"$400\"\n- Start sentences with \"So,\" \"Well,\" or \"And\" when natural\n- If more detail needed, say \"I can go into more detail if you'd like\"\n- Never use bullet points, lists, numbered items, or formatted text\n- Never say \"I apologize for the inconvenience\" or \"Great question!\"\n\n## Response Style\n- Sound warm, knowledgeable, and direct — like a real concierge receptionist\n- When answering questions, give the KEY FACT and stop. Do not lecture.\n- Acknowledge what the caller said before responding — \"Got it\" / \"Right\" / \"Okay so\"\n- If unsure, say \"That's a great question for Sheena — let me make sure she calls you back about that\"\n\n## Insurance — CRITICAL\nWe are a private, cash-pay practice. We do NOT accept any insurance, Medicare, or Medicaid. If asked, say: \"We're a private cash-pay practice, so we don't work with insurance. A lot of our patients actually find that easier since our pricing is all-inclusive with no surprise bills. Would you like to hear about our options?\"\n\n## Task Flow\n1. Greet warmly, ask how you can help\n2. Answer service questions concisely from knowledge base, then offer to collect info\n3. For scheduling: collect ONE piece at a time — name, callback number, service interest, how they heard about us\n4. Confirm back: \"So I have [name] at [number], interested in [service] — is that right?\"\n5. Close: \"Sheena will reach out to you at that number. Anything else before we wrap up?\"\n\n## Urgency — Flag Immediately\nFlag if: caller has acute health symptoms, mentions surgical complications, is highly distressed, or asks to speak to Dr. Valladares or Sheena directly.\n\n## Spam Detection\nIf the caller is a solicitor, salesperson, or robot — politely say \"We're not interested, but thank you\" and end the call.\n\n## Rules\n- Never quote exact final prices — give ranges and say Sheena will confirm exact pricing\n- Never schedule specific appointment times — say Sheena will reach out to schedule\n- Never give a medical diagnosis over the phone\n- Never mention specific GLP-1 brand names like semaglutide or tirzepatide\n- After hours: acknowledge it, still collect intake, promise next-business-day callback\n- If caller wants a human: say \"Of course — I'll make sure Sheena gets this. Can I just grab your name and best number so she can call you back?\"",
+
+    "begin_message": "Thanks for calling South Florida Surgery and Bariatric Institute! How can I help you today?",
+
+    "general_tools": [
+      {
+        "type": "end_call",
+        "name": "end_call",
+        "description": "End the call after completing intake or answering questions. Use when the caller is satisfied, when a spam call is detected, or after two unanswered reminders."
+      }
+    ],
+
+    "kb_config": {
+      "top_k": 3,
+      "filter_score": 0.6
+    },
+
+    "dynamic_variables": {
+      "caller_name": "",
+      "caller_phone": "",
+      "service_interest": "",
+      "how_heard_about_us": "",
+      "language_used": "english",
+      "urgency_flag": "routine",
+      "call_type": "new_inquiry",
+      "after_hours": false,
+      "is_spam": false,
+      "bmi_mentioned": "",
+      "wants_human": false
+    }
+  },
+
+  "webhook_url": "https://n8n.srv1546601.hstgr.cloud/webhook/sfsbi-retell-call-ended",
+
+  "post_call_analysis_data": [
+    {
+      "name": "intake_complete",
+      "type": "boolean",
+      "description": "Whether AI collected caller name, phone number, and service interest"
+    },
+    {
+      "name": "call_outcome",
+      "type": "enum",
+      "choices": [
+        "intake_collected",
+        "question_answered_only",
+        "urgent_escalation",
+        "human_handoff_requested",
+        "insurance_disqualified",
+        "voicemail",
+        "wrong_number",
+        "hang_up_early",
+        "spam"
+      ]
+    },
+    {
+      "name": "service_interest",
+      "type": "enum",
+      "choices": [
+        "gastric_sleeve",
+        "gastric_bypass",
+        "orbera_balloon",
+        "allurion_balloon",
+        "lap_band",
+        "apollo_esg",
+        "tore_revision",
+        "glp1_weight_loss",
+        "phentermine",
+        "peptides_b12_mic",
+        "coolsculpting",
+        "surgical_body_contouring",
+        "bbl",
+        "liposuction",
+        "tummy_tuck",
+        "breast_procedure",
+        "blepharoplasty",
+        "nutrition_counseling",
+        "concierge_medicine",
+        "telehealth",
+        "general_inquiry",
+        "unknown"
+      ]
+    },
+    {
+      "name": "urgency_level",
+      "type": "enum",
+      "choices": ["routine", "urgent", "emergency"]
+    },
+    {
+      "name": "language_used",
+      "type": "enum",
+      "choices": ["english", "spanish", "both"]
+    },
+    {
+      "name": "lead_score",
+      "type": "enum",
+      "choices": ["high", "medium", "low"],
+      "description": "High = ready to book or pay, asked about pricing/scheduling. Medium = interested but exploring options. Low = just asking a quick question, insurance inquiry, or unlikely to convert."
+    },
+    {
+      "name": "call_summary",
+      "type": "string",
+      "description": "Two to three sentence summary of what the caller wanted and the outcome of the call"
+    }
+  ]
+}
