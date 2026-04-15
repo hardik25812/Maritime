@@ -24,5 +24,13 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|sfsbi-logo.webp|.*\\.png$|.*\\.webp$|api/).*)'],
+  matcher: [
+    '/dashboard/:path*',
+    '/calls/:path*',
+    '/leads/:path*',
+    '/urgent/:path*',
+    '/analytics/:path*',
+    '/weekly/:path*',
+    '/settings/:path*',
+  ],
 }
