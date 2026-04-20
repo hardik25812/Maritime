@@ -14,6 +14,7 @@ import {
   LogOut,
   Menu,
   X,
+  Radar,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createBrowserClient } from '@supabase/ssr'
@@ -24,6 +25,7 @@ const nav = [
   { href: '/calls',      label: 'Call Logs',    icon: PhoneCall },
   { href: '/leads',      label: 'Lead Tracker', icon: TrendingUp },
   { href: '/urgent',     label: 'Urgent Flags', icon: AlertTriangle },
+  { href: '/lead-gen',   label: 'Lead Gen',     icon: Radar },
   { href: '/analytics',  label: 'Analytics',    icon: Activity },
   { href: '/weekly',     label: 'Weekly Report', icon: Calendar },
 ]

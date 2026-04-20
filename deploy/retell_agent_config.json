@@ -100,6 +100,7 @@
   "max_call_duration_ms": 3600000,
 
   "pronunciation_dictionary": [
+    { "word": "Martine", "alphabet": "ipa", "phoneme": "mɑːrˈtɪn" },
     { "word": "IETI", "alphabet": "ipa", "phoneme": "aɪ iː tiː aɪ" },
     { "word": "ERMI", "alphabet": "ipa", "phoneme": "ɜːrmi" },
     { "word": "HERTSMI", "alphabet": "ipa", "phoneme": "hɜːrtsmi" },
