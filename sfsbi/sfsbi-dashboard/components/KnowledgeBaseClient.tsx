@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { BookOpen, Save, RotateCcw, Check, AlertTriangle, Loader2 } from 'lucide-react'
 import TopBar from '@/components/TopBar'
+import KnowledgeSourcesSection from '@/components/KnowledgeSourcesSection'
 
 type KBData = {
   prompt: string
@@ -149,6 +150,9 @@ export default function KnowledgeBaseClient() {
                 className="w-full px-5 py-4 font-mono text-[13px] leading-relaxed text-slate-900 resize-y min-h-[600px] focus:outline-none"
               />
             </section>
+
+            {/* Extra knowledge sources (URLs, text snippets) */}
+            <KnowledgeSourcesSection />
 
             {/* Tools */}
             {data.tools.length > 0 && (
