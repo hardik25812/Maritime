@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IETI Test Call</title>
+  <script src="https://cdn.jsdelivr.net/npm/retell-client-js-sdk/dist/index.umd.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f1f5f9; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .card { background: white; border-radius: 16px; padding: 40px; max-width: 420px; width: 100%; box-shadow: 0 4px 24px rgba(0,0,0,0.10); text-align: center; }
+    .logo { width: 56px; height: 56px; background: #1e2a1e; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 24px; }
+    h1 { font-size: 20px; font-weight: 700; color: #1e2a1e; margin-bottom: 6px; }
+    p.sub { font-size: 13px; color: #64748b; margin-bottom: 28px; }
+    .status { font-size: 13px; padding: 10px 16px; border-radius: 8px; background: #f1f5f9; color: #475569; margin-bottom: 24px; min-height: 40px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .status.connected { background: #dcfce7; color: #15803d; }
+    .status.error { background: #fee2e2; color: #dc2626; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse 1.2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    button { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    #startBtn { background: #3B5323; color: white; margin-bottom: 10px; }
+    #startBtn:hover { background: #4a6830; }
+    #startBtn:disabled { background: #94a3b8; cursor: not-allowed; }
+    #stopBtn { background: #dc2626; color: white; display: none; }
+    #stopBtn:hover { background: #b91c1c; }
+    .info { margin-top: 20px; font-size: 11px; color: #94a3b8; line-height: 1.6; }
+    .token-box { margin-bottom: 20px; }
+    .token-box textarea { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 11px; font-family: monospace; resize: vertical; min-height: 80px; color: #475569; background: #f8fafc; }
+    label { font-size: 12px; font-weight: 600; color: #475569; display: block; text-align: left; margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">🌿</div>
+    <h1>IETI Test Call</h1>
+    <p class="sub">Talk to IETI's AI Receptionist — triggers the full n8n workflow on hang-up</p>
+
+    <div class="token-box">
+      <label>Access Token (paste a new one or use pre-filled)</label>
+      <textarea id="tokenInput">eyJhbGciOiJIUzI1NiJ9.eyJ2aWRlbyI6eyJyb29tSm9pbiI6dHJ1ZSwicm9vbSI6IndlYl9jYWxsX2IzZDQ3MTY3MjI4MTE3M2QxMzA0YjY5YjViOSJ9LCJpc3MiOiJBUElVTXg5OFUyR2MyanIiLCJleHAiOjE3NzYxNjQ1NTcsIm5iZiI6MCwic3ViIjoiY2xpZW50In0.jqt_sGGnrm1ACs765Yj56KQ9r3iwzXOTt_Hu_zCSwxA</textarea>
+    </div>
+
+    <div class="status" id="status">Ready to start call</div>
+
+    <button id="startBtn" onclick="startCall()">📞 Start Test Call</button>
+    <button id="stopBtn" onclick="stopCall()">📵 Hang Up</button>
+
+    <div class="info">
+      When you hang up, Retell fires the <strong>call_ended</strong> webhook → n8n processes it → row appears in Supabase → dashboard updates live.<br><br>
+      <strong>Token expires ~1hr.</strong> Run the PowerShell command again to get a fresh token if needed.
+    </div>
+  </div>
+
+  <script>
+    let retellClient = null;
+
+    async function startCall() {
+      const token = document.getElementById('tokenInput').value.trim();
+      if (!token) { setStatus('Paste an access token first', 'error'); return; }
+
+      const startBtn = document.getElementById('startBtn');
+      const stopBtn = document.getElementById('stopBtn');
+      startBtn.disabled = true;
+      setStatus('Connecting...', '');
+
+      try {
+        retellClient = new retellClientJsSdk.RetellWebClient();
+
+        retellClient.on('call_started', () => {
+          setStatus('<span class="dot"></span> Connected — speak now', 'connected');
+          stopBtn.style.display = 'block';
+          startBtn.style.display = 'none';
+        });
+
+        retellClient.on('call_ended', () => {
+          setStatus('✅ Call ended — webhook fired to n8n!', 'connected');
+          stopBtn.style.display = 'none';
+          startBtn.style.display = 'block';
+          startBtn.disabled = false;
+          startBtn.textContent = '📞 Start New Test Call';
+        });
+
+        retellClient.on('error', (err) => {
+          setStatus('Error: ' + (err?.message || err), 'error');
+          startBtn.disabled = false;
+          stopBtn.style.display = 'none';
+          startBtn.style.display = 'block';
+        });
+
+        await retellClient.startCall({ accessToken: token });
+
+      } catch (e) {
+        setStatus('Failed: ' + e.message, 'error');
+        startBtn.disabled = false;
+      }
+    }
+
+    function stopCall() {
+      if (retellClient) {
+        retellClient.stopCall();
+        retellClient = null;
+      }
+    }
+
+    function setStatus(msg, cls) {
+      const el = document.getElementById('status');
+      el.innerHTML = msg;
+      el.className = 'status ' + (cls || '');
+    }
+  </script>
+</body>
+</html>

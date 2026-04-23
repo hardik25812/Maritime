@@ -5,6 +5,10 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+// SFSBI-only table. Isolated from IETI (which uses ieti_call_logs).
+export const SFSBI_TABLE = 'sfsbi_call_logs'
+export const SFSBI_AGENT_ID = 'agent_dfd95700637dad9769ebf4fa24'
+
 export type CallLog = {
   id: number
   received_at: string

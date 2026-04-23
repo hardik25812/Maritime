@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+:root {
+  --brand-primary: #2c5f2e;
+  --brand-primary-light: #3a7d3d;
+  --brand-secondary: #c9a84c;
+  --brand-accent: #8b4513;
+  --brand-dark: #1a1f2e;
+  --brand-sidebar: #111827;
+  --brand-bg: #f0f2f5;
+  --brand-card: #ffffff;
+  --brand-text: #1f2937;
+  --brand-muted: #6b7280;
+  --brand-border: #e5e7eb;
+  --brand-success: #059669;
+  --brand-warning: #d97706;
+  --brand-danger: #dc2626;
+  --brand-info: #2563eb;
+}
+
+body {
+  background-color: var(--brand-bg);
+  color: var(--brand-text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* Agent status pulse */
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(5, 150, 105, 0); }
+}
+.agent-active { animation: pulse-green 2s infinite; }
+
+/* Security alert flash */
+@keyframes alert-flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.security-alert { animation: alert-flash 1s infinite; }

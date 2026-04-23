@@ -6,7 +6,7 @@ import {
   LineChart, Line, PieChart, Pie, Cell, Legend, CartesianGrid,
 } from 'recharts'
 import TopBar from '@/components/TopBar'
-import { supabase } from '@/lib/supabase'
+import { supabase, SFSBI_TABLE } from '@/lib/supabase'
 import type { CallLog } from '@/lib/supabase'
 import { formatDateShort, getServiceLabel } from '@/lib/utils'
 
@@ -26,7 +26,7 @@ export default function AnalyticsClient() {
   const fetchCalls = useCallback(async (showRefreshing = false) => {
     if (showRefreshing) setRefreshing(true)
     const { data } = await supabase
-      .from('call_logs')
+      .from(SFSBI_TABLE)
       .select('*')
       .order('received_at', { ascending: false })
       .limit(500)

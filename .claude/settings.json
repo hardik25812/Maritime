@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:blog.sucuri.net)",
+      "WebFetch(domain:searchengineland.com)",
+      "WebFetch(domain:developers.google.com)",
+      "WebFetch(domain:hermes-agent.nousresearch.com)",
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:blog.n8n.io)"
+    ]
+  }
+}

@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SFSBI — AI Growth Systems Proposal</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3a;
+    --text: #e8e8f0;
+    --text-dim: #8888a0;
+    --accent: #6366f1;
+    --accent2: #818cf8;
+    --green: #22c55e;
+    --red: #ef4444;
+    --orange: #f59e0b;
+    --cyan: #06b6d4;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* ── SLIDE SYSTEM ── */
+  .slide {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px 80px;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .slide-number {
+    position: absolute;
+    top: 30px;
+    right: 40px;
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .logo-bar {
+    position: absolute;
+    top: 30px;
+    left: 40px;
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  /* ── TITLE SLIDE ── */
+  .title-slide {
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(ellipse at center, #1a1a3a 0%, var(--bg) 70%);
+  }
+
+  .title-slide h1 {
+    font-size: 64px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1.1;
+    margin-bottom: 20px;
+  }
+
+  .title-slide h1 span {
+    background: linear-gradient(135deg, var(--accent), var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .title-slide .subtitle {
+    font-size: 22px;
+    color: var(--text-dim);
+    font-weight: 300;
+    margin-bottom: 40px;
+  }
+
+  .title-slide .meta {
+    font-size: 14px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  /* ── SECTION HEADERS ── */
+  h2 {
+    font-size: 42px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+    line-height: 1.2;
+  }
+
+  h2 span { color: var(--accent2); }
+
+  h3 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text);
+  }
+
+  .section-label {
+    font-size: 12px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 16px;
+    font-weight: 600;
+  }
+
+  .section-desc {
+    font-size: 18px;
+    color: var(--text-dim);
+    max-width: 700px;
+    line-height: 1.6;
+    margin-bottom: 40px;
+  }
+
+  /* ── CARDS ── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    margin-top: 20px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    transition: all 0.3s ease;
+  }
+
+  .card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.1);
+  }
+
+  .card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 20px;
+  }
+
+  .card h4 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .card p {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  /* ── STAT BLOCKS ── */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin: 30px 0;
+  }
+
+  .stat-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 32px;
+    text-align: center;
+  }
+
+  .stat-number {
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .stat-number.red { color: var(--red); }
+  .stat-number.green { color: var(--green); }
+  .stat-number.orange { color: var(--orange); }
+  .stat-number.cyan { color: var(--cyan); }
+  .stat-number.accent { color: var(--accent2); }
+
+  .stat-label {
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 20px 0;
+  }
+
+  .flow-step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .flow-arrow {
+    color: var(--accent2);
+    font-size: 20px;
+  }
+
+  /* ── TABLES ── */
+  .comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+  }
+
+  .comparison-table th {
+    text-align: left;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .comparison-table td {
+    padding: 16px 20px;
+    font-size: 15px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .comparison-table tr:hover {
+    background: var(--surface);
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .tag-red { background: rgba(239,68,68,0.15); color: var(--red); }
+  .tag-green { background: rgba(34,197,94,0.15); color: var(--green); }
+  .tag-orange { background: rgba(245,158,11,0.15); color: var(--orange); }
+  .tag-cyan { background: rgba(6,182,212,0.15); color: var(--cyan); }
+
+  /* ── TIMELINE ── */
+  .timeline {
+    margin: 30px 0;
+    padding-left: 30px;
+    border-left: 2px solid var(--border);
+  }
+
+  .timeline-item {
+    position: relative;
+    padding: 0 0 32px 30px;
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 6px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 3px solid var(--bg);
+  }
+
+  .timeline-item .time {
+    font-size: 12px;
+    color: var(--accent2);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .timeline-item h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .timeline-item p {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* ── ALERT BOX ── */
+  .alert {
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin: 24px 0;
+  }
+
+  .alert-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .alert-header .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--red);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .alert h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--red);
+  }
+
+  .alert p {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  .alert code {
+    background: rgba(239,68,68,0.15);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--red);
+  }
+
+  /* ── SUCCESS BOX ── */
+  .success-box {
+    background: rgba(34, 197, 94, 0.08);
+    border: 1px solid rgba(34, 197, 94, 0.25);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin: 24px 0;
+  }
+
+  .success-box h4 {
+    color: var(--green);
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .success-box p {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  /* ── PRICING ── */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin: 30px 0;
+  }
+
+  .price-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .price-card.featured {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(99,102,241,0.05), rgba(6,182,212,0.05));
+  }
+
+  .price-card.featured::before {
+    content: 'RECOMMENDED';
+    position: absolute;
+    top: 16px;
+    right: -30px;
+    background: var(--accent);
+    color: white;
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 4px 40px;
+    transform: rotate(45deg);
+  }
+
+  .price-card .price {
+    font-size: 42px;
+    font-weight: 800;
+    margin: 16px 0;
+    letter-spacing: -1px;
+  }
+
+  .price-card .price span {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--text-dim);
+  }
+
+  .price-card .includes {
+    list-style: none;
+    margin-top: 20px;
+  }
+
+  .price-card .includes li {
+    padding: 8px 0;
+    font-size: 14px;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .price-card .includes li::before {
+    content: '✓';
+    color: var(--green);
+    font-weight: 700;
+  }
+
+  /* ── QUOTE ── */
+  .quote {
+    border-left: 3px solid var(--accent);
+    padding: 20px 28px;
+    margin: 24px 0;
+    background: var(--surface);
+    border-radius: 0 12px 12px 0;
+  }
+
+  .quote p {
+    font-size: 17px;
+    font-style: italic;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  .quote .attribution {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 8px;
+    font-style: normal;
+  }
+
+  /* ── CHANNEL ICONS ── */
+  .channel-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  .channel-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 16px;
+    text-align: center;
+    transition: all 0.3s;
+  }
+
+  .channel-item:hover {
+    border-color: var(--accent);
+  }
+
+  .channel-item .icon {
+    font-size: 32px;
+    margin-bottom: 10px;
+  }
+
+  .channel-item .name {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .channel-item .status {
+    font-size: 11px;
+    margin-top: 4px;
+  }
+
+  /* ── BILINGUAL DEMO ── */
+  .bilingual-demo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin: 24px 0;
+  }
+
+  .chat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .chat-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .chat-messages {
+    padding: 20px;
+  }
+
+  .chat-msg {
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .chat-msg.incoming .bubble {
+    background: var(--surface2);
+    border-radius: 4px 16px 16px 16px;
+    align-self: flex-start;
+  }
+
+  .chat-msg.outgoing .bubble {
+    background: rgba(99,102,241,0.15);
+    border-radius: 16px 4px 16px 16px;
+    align-self: flex-end;
+  }
+
+  .bubble {
+    padding: 12px 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 85%;
+  }
+
+  .bubble .sender {
+    font-size: 11px;
+    color: var(--accent2);
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .slide { padding: 40px 24px; }
+    h2 { font-size: 28px; }
+    .title-slide h1 { font-size: 36px; }
+    .stat-row { grid-template-columns: 1fr; }
+    .channel-grid { grid-template-columns: repeat(3, 1fr); }
+    .bilingual-demo { grid-template-columns: 1fr; }
+    .pricing-grid { grid-template-columns: 1fr; }
+  }
+
+  @media print {
+    .slide { min-height: auto; page-break-after: always; padding: 40px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 1: TITLE -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide title-slide">
+  <div class="meta">PREPARED FOR</div>
+  <h1>South Florida Surgery,<br>Bariatric & Cosmetic Institute</h1>
+  <div class="subtitle">AI Growth Systems — Tailored Proposal</div>
+  <div class="meta">APRIL 15, 2026 &nbsp;·&nbsp; CONFIDENTIAL</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 2: THE SITUATION -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="logo-bar">SFSBI</div>
+  <div class="slide-number">01 / CURRENT STATE</div>
+
+  <div class="section-label">Where You Are Today</div>
+  <h2>A world-class team with a <span>bottleneck problem</span></h2>
+  <p class="section-desc">
+    Surgeon + psychiatrist + obesity-specialist dietitian under one roof.
+    That's what hospital programs charge $25K+ to offer. But your patients
+    can't always reach you — and when they can't, they go elsewhere.
+  </p>
+
+  <div class="stat-row">
+    <div class="stat-block">
+      <div class="stat-number orange">30–40</div>
+      <div class="stat-label">Monthly Inquiries</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-number red">1.5 yr</div>
+      <div class="stat-label">Facebook DMs Unanswered</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-number cyan">$2K–$8K</div>
+      <div class="stat-label">Revenue Per Surgical Patient</div>
+    </div>
+  </div>
+
+  <div class="quote">
+    <p>"My Facebook — I have seen DMs through the Facebook that weren't answered for over a year and a half."</p>
+    <div class="attribution">— Dr. Valladares, Discovery Call</div>
+  </div>
+
+  <div class="quote">
+    <p>"If we can get something that when people do engage, where it can engage across the board and not be dependent upon somebody logging in — that is powerful."</p>
+    <div class="attribution">— Dr. Valladares, Discovery Call</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 3: SECURITY FINDING -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="logo-bar">SFSBI</div>
+  <div class="slide-number">02 / SECURITY AUDIT</div>
+
+  <div class="section-label">Before We Build — Something We Found</div>
+  <h2>Your patient email is <span>unprotected</span></h2>
+  <p class="section-desc">
+    During our pre-build audit of sfsbi.com, we found two critical
+    email security gaps that leave your practice exposed to spoofing attacks.
+  </p>
+
+  <div class="alert">
+    <div class="alert-header">
+      <div class="dot"></div>
+      <h4>CRITICAL: No DMARC Record</h4>
+    </div>
+    <p>
+      Right now, anyone can send an email that appears to come from
+      <code>sheena@sfsbi.com</code> or <code>info@sfsbi.com</code> —
+      and the receiving inbox has no way to know it's fake. For a medical
+      practice where patients share health information via email, this is
+      a HIPAA-adjacent exposure.
+    </p>
+  </div>
+
+  <div class="alert">
+    <div class="alert-header">
+      <div class="dot"></div>
+      <h4>HIGH: SPF Record Misconfigured</h4>
+    </div>
+    <p>
+      Your email runs through Google Workspace, but your SPF record doesn't
+      include Google's servers. Your own legitimate emails may be failing
+      authentication — landing in spam or being rejected entirely.
+    </p>
+  </div>
+
+  <div class="success-box">
+    <h4>We'll Fix This — Included at No Extra Cost</h4>
+    <p>
+      Two DNS record changes. Takes 30 minutes. We'll add DMARC, fix the SPF,
+      and set up the bare domain redirect (sfsbi.com currently shows an error
+      instead of your website). This is done as part of our onboarding.
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 4: SYSTEM 1 — OMNICHANNEL AI -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="logo-bar">SFSBI</div>
+  <div class="slide-number">03 / SYSTEM ONE</div>
+
+  <div class="section-label">The #1 Priority</div>
+  <h2>Every channel. One AI. <span>Bilingual.</span></h2>
+  <p class="section-desc">
+    Phone calls, Instagram DMs, Facebook Messenger, WhatsApp, TikTok,
+    website chat — all answered within seconds, in English or Spanish.
+    Sheena sees only qualified, summarized leads.
+  </p>
+
+  <div class="channel-grid">
+    <div class="channel-item">
+      <div class="icon">📞</div>
+      <div class="name">Phone Calls</div>
+      <div class="status" style="color: var(--green);">24/7 Live</div>
+    </div>
+    <div class="channel-item">
+      <div class="icon">💬</div>
+      <div class="name">WhatsApp</div>
+      <div class="status" style="color: var(--green);">Instant Reply</div>
+    </div>
+    <div class="channel-item">
+      <div class="icon">📸</div>
+      <div class="name">Instagram DMs</div>
+      <div class="status" style="color: var(--green);">Auto-Engage</div>
+    </div>
+    <div class="channel-item">
+      <div class="icon">👤</div>
+      <div class="name">Facebook</div>
+      <div class="status" style="color: var(--green);">Never Missed</div>
+    </div>
+    <div class="channel-item">
+      <div class="icon">🎵</div>
+      <div class="name">TikTok</div>
+      <div class="status" style="color: var(--green);">Auto-Engage</div>
+    </div>
+  </div>
+
+  <h3 style="margin-top: 40px;">How It Works</h3>
+
+  <div class="flow">
+    <div class="flow-step">Patient messages on any channel</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">AI detects language (EN/ES)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Qualifies: procedure, BMI, urgency</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Answers technical questions</div>
+  </div>
+  <div class="flow">
+    <div class="flow-step">Spam / insurance call?</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step" style="border-color: var(--red);">Filtered & closed</div>
+    <div class="flow-step" style="margin-left: 40px;">Qualified lead?</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step" style="border-color: var(--green);">Sheena gets summary + notification</div>
+  </div>
+
+  <div class="bilingual-demo" style="margin-top: 40px;">
+    <div class="chat-box">
+      <div class="chat-header">🇺🇸 English Conversation</div>
+      <div class="chat-messages">
+        <div class="chat-msg incoming">
+          <div class="bubble">
+            <div class="sender">Patient</div>
+            Hi, I'm interested in gastric sleeve surgery. How much does it cost and what's the process?
+          </div>
+        </div>
+        <div class="chat-msg outgoing">
+          <div class="bubble">
+            <div class="sender">SFSBI AI</div>
+            Thank you for reaching out! Dr. Valladares offers gastric sleeve as an all-inclusive package — that covers the surgeon, hospital, anesthesia, psychiatrist clearance, and dietitian follow-up for 6-12 months. Would you like to schedule a free consultation to discuss your specific situation?
+          </div>
+        </div>
+        <div class="chat-msg incoming">
+          <div class="bubble">
+            <div class="sender">Patient</div>
+            Do I need a psychiatrist evaluation? That sounds like a lot of steps.
+          </div>
+        </div>
+        <div class="chat-msg outgoing">
+          <div class="bubble">
+            <div class="sender">SFSBI AI</div>
+            Great question — yes, it's required, but here's what makes us different: we have a psychiatrist on staff. No outside referrals, no 4-6 week wait. Everything happens in one place. Most patients complete the full pre-op process faster with us than at hospital programs.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chat-box">
+      <div class="chat-header">🇪🇸 Conversación en Español</div>
+      <div class="chat-messages">
+        <div class="chat-msg incoming">
+          <div class="bubble">
+            <div class="sender">Paciente</div>
+            Hola, quiero información sobre la manga gástrica. ¿Cuánto cuesta y aceptan seguro?
+          </div>
+        </div>
+        <div class="chat-msg outgoing">
+          <div class="bubble">
+            <div class="sender">SFSBI AI</div>
+            ¡Gracias por comunicarse! Somos una práctica de pago directo — no aceptamos seguros, pero nuestro paquete todo incluido cubre cirujano, hospital, anestesia, evaluación psiquiátrica y seguimiento con nutricionista por 6-12 meses. ¿Le gustaría agendar una consulta gratuita?
+          </div>
+        </div>
+        <div class="chat-msg incoming">
+          <div class="bubble">
+            <div class="sender">Paciente</div>
+            ¿Por qué no aceptan seguro? Eso es muy caro.
+          </div>
+        </div>
+        <div class="chat-msg outgoing">
+          <div class="bubble">
+            <div class="sender">SFSBI AI</div>
+            Entiendo su preocupación. Al ser pago directo, ofrecemos atención personalizada tipo concierge — sin esperas de autorización ni aprobaciones. También ofrecemos opciones de financiamiento a través de CareCredit y LendingClub. ¿Le interesa que le explique las opciones?
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-grid" style="margin-top: 30px;">
+    <div class="card">
+      <div class="card-icon" style="background: rgba(239,68,68,0.15);">🚫</div>
+      <h4>Spam Filter</h4>
+      <p>AI detects and routes spam calls, insurance inquiries, and solicitors — Sheena never sees them. She estimated these waste significant time each week.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background: rgba(34,197,94,0.15);">🔄</div>
+      <h4>Human Handoff</h4>
+      <p>When a patient asks to speak to a real person or the conversation hits a complexity threshold, the AI seamlessly transfers to Sheena with full context.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background: rgba(99,102,241,0.15);">📊</div>
+      <h4>Daily Report</h4>
+      <p>Every morning: how many inquiries came in, which channels, what procedures they asked about, who's qualified, who's spam. Full QC visibility.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 5: SYSTEM 2 — ALLURION LAUNCH -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="logo-bar">SFSBI</div>
+  <div class="slide-number">04 / SYSTEM TWO</div>
+
+  <div class="section-label">Time-Sensitive Opportunity</div>
+  <h2>Allurion Balloon: <span>First in Miami</span></h2>
+  <p class="section-desc">
+    FDA approved February 2026. You're one of ~20 US centers being trained.
+    No page exists on sfsbi.com yet. This is a first-mover window that
+    closes the moment competitors launch their pages.
+  </p>
+
+  <div class="stat-row">
+    <div class="stat-block">
+      <div class="stat-number accent">~20</div>
+      <div class="stat-label">US Centers Selected</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-number green">0</div>
+      <div class="stat-label">Competitors Live in Miami</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-number orange">$5K–$8K</div>
+      <div class="stat-label">Expected Per Procedure</div>
+    </div>
+  </div>
+
+  <h3>What We Build</h3>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon" style="background: rgba(99,102,241,0.15);">🌐</div>
+      <h4>Dedicated Landing Page</h4>
+      <p>"The world's first swallowable weight loss balloon — no surgery, no endoscopy, no anesthesia — now available in Miami." SEO-optimized. Spanish + English.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background: rgba(245,158,11,0.15);">📋</div>
+      <h4>AI-Powered Waitlist</h4>
+      <p>"Join the waitlist — we'll contact you the moment we're ready." Builds a hot prospect list automatically. AI qualifies each person on intake: BMI, fear of surgery, prior treatments.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background: rgba(6,182,212,0.15);">🎯</div>
+      <h4>Smart Routing</h4>
+      <p>Not everyone is right for Allurion. The AI qualifies and routes: scared of surgery → Allurion. BMI too high → surgical options. Already tried balloon → GLP-1. Every lead lands at the right service.</p>
+    </div>
+  </div>
+
+  <div class="quote" style="margin-top: 30px;">
+    <p>"There is a new thing that we're going to be doing. It's going to be an intragastric balloon that patients will be able to swallow. The company picked about 20 centers across the United States, and we're going to be one of them."</p>
+    <div class="attribution">— Dr. Valladares, Discovery Call</div>
+  </div>
+
+  <h3 style="margin-top: 30px;">Target Patient: Surgery-Averse, High-Intent</h3>
+  <table class="comparison-table">
+    <tr>
+      <th>Patient Type</th>
+      <th>Fear Level</th>
+      <th>Best Fit</th>
+      <th>Value</th>
+    </tr>
+    <tr>
+      <td>Terrified of surgery</td>
+      <td><span class="tag tag-red">High</span></td>
+      <td>Allurion Balloon</td>
+      <td>$5K–$8K</td>
+    </tr>
+    <tr>
+      <td>Open to minimally invasive</td>
+      <td><span class="tag tag-orange">Medium</span></td>
+      <td>Apollo ESG / Orbera</td>
+      <td>$6K–$15K</td>
+    </tr>
+    <tr>
+      <td>Ready for surgery</td>
+      <td><span class="tag tag-green">Low</span></td>
+      <td>Gastric Sleeve / Bypass</td>
+      <td>$9K–$25K</td>
+    </tr>
+    <tr>
+      <td>Wants medication only</td>
+      <td><span class="tag tag-cyan">None</span></td>
+      <td>GLP-1 Program</td>
+      <td>$200–$500/mo</td>
+    </tr>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 6: SYSTEM 3 — NURTURE AGENT -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="logo-bar">SFSBI</div>
+  <div class="slide-number">05 / SYSTEM THREE</div>
+
+  <div class="section-label">Converting the Long Cycle</div>
+  <h2>6-month nurture sequence — <span>fully automated</span></h2>
+  <p class="section-desc">
+    Surgery decisions take months. You currently do zero automated follow-up.
+    Every lead that doesn't book on the first call is a lead that goes cold.
+    This system keeps SFSBI top-of-mind without Sheena lifting a finger.
+  </p>
+
+  <div class="stat-row">
+    <div class="stat-block">
+      <div class="stat-number red">0</div>
+      <div class="stat-label">Current Follow-Up Sequences</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-number accent">6 mo</div>
+      <div class="stat-label">Avg Decision Timeline</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-number green">$8K</div>
+      <div class="stat-label">Revenue Per Converted Lead</div>
+    </div>
+  </div>
+
+  <h3>The Automated Journey</h3>
+
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="time">Week 1</div>
+      <h4>"Sleeve vs. Bypass: What's Right for You?"</h4>
+      <p>Educational content answering the #1 question new inquiries have. Positions Dr. Valladares as the expert.</p>
+    </div>
+    <div class="timeline-item">
+      <div class="time">Week 2</div>
+      <h4>"The Complete Pre-Op Process at SFSBI"</h4>
+      <p>Step-by-step walkthrough. Highlights the in-house psychiatrist advantage — no referrals, no waiting.</p>
+    </div>
+    <div class="timeline-item">
+      <div class="time">Week 3</div>
+      <h4>"Financing Options for Cash-Pay Surgery"</h4>
+      <p>CareCredit, LendingClub, PatientFi — all your financing partners, explained simply.</p>
+    </div>
+    <div class="timeline-item">
+      <div class="time">Week 4</div>
+      <h4>"Meet Your Care Team" — Video Introduction</h4>
+      <p>Dr. Valladares, Dr. Jose Valladares (psychiatry), Sheena Acosta (nutrition). Faces build trust.</p>
+    </div>
+    <div class="timeline-item">
+      <div class="time">Month 2</div>
+      <h4>Patient Transformation Story</h4>
+      <p>HIPAA-compliant success story with consent. Nothing sells surgery like someone who's been through it.</p>
+    </div>
+    <div class="timeline-item">
+      <div class="time">Month 3</div>
+      <h4>"The New Swallowable Balloon — Is It Right for You?"</h4>
+      <p>Allurion cross-sell for patients who haven't committed to surgery. Opens a second conversion path.</p>
+    </div>
+    <div class="timeline-item">
+      <div class="time">Month 4</div>
+      <h4>"Where Will You Be in 6 Months?"</h4>
+      <p>Urgency prompt — calculate their projected weight loss based on their BMI.</p>
+    </div>
+    <div class="timeline-item">
+      <div class="time">Month 6</div>
+      <h4>Free 15-Minute Video Consult with Sheena</h4>
+      <p>Final re-engagement. Low-commitment offer to restart the conversation.</p>
+    </div>
+  </div>
+
+  <p style="color: var(--text-dim); font-size: 14px; margin-top: 16px;">All content bilingual (English + Spanish). All automated. Sheena touches nothing until they raise their hand.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 7: ROI -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="logo-bar">SFSBI</div>
+  <div class="slide-number">06 / RETURN ON INVESTMENT</div>
+
+  <div class="section-label">The Numbers</div>
+  <h2>Conservative revenue <span>recovery model</span></h2>
+
+  <table class="comparison-table" style="margin: 30px 0;">
+    <tr>
+      <th>System</th>
+      <th>Metric</th>
+      <th>Conservative Estimate</th>
+      <th>Monthly Revenue Impact</th>
+    </tr>
+    <tr>
+      <td>Omnichannel AI</td>
+      <td>Missed calls/DMs recovered</td>
+      <td>3–5 patients/month</td>
+      <td style="color: var(--green); font-weight: 600;">+$2,000 – $8,000</td>
+    </tr>
+    <tr>
+      <td>Allurion Launch</td>
+      <td>Waitlist → bookings</td>
+      <td>2–4 procedures/month</td>
+      <td style="color: var(--green); font-weight: 600;">+$10,000 – $32,000</td>
+    </tr>
+    <tr>
+      <td>Nurture Sequence</td>
+      <td>Cold leads reactivated</td>
+      <td>1–2 surgeries/month</td>
+      <td style="color: var(--green); font-weight: 600;">+$2,000 – $16,000</td>
+    </tr>
+    <tr>
+      <td><strong>Total Estimated Impact</strong></td>
+      <td></td>
+      <td></td>
+      <td style="color: var(--green); font-weight: 800; font-size: 18px;">+$14,000 – $56,000/mo</td>
+    </tr>
+  </table>
+
+  <p class="section-desc" style="margin-top: 0;">
+    Even at the low end of these estimates, the system generates
+    multiples of its cost within the first month.
+  </p>
+
+  <div class="success-box">
+    <h4>Plus: What You Can't Put a Dollar On</h4>
+    <p>
+      Sheena's time freed up. Dr. V not worried about missed DMs.
+      24/7 coverage without hiring. Bilingual capability without
+      bilingual staff costs. First-mover position on Allurion
+      before any Miami competitor launches.
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 8: IMPLEMENTATION TIMELINE -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="logo-bar">SFSBI</div>
+  <div class="slide-number">07 / IMPLEMENTATION</div>
+
+  <div class="section-label">Roadmap</div>
+  <h2>From today to <span>live in 2 weeks</span></h2>
+
+  <div class="timeline" style="margin-top: 30px;">
+    <div class="timeline-item">
+      <div class="time">Day 1–2</div>
+      <h4>Email Security Fix + Bare Domain Redirect</h4>
+      <p>DMARC + SPF correction. Immediate. No cost. Protects patient communication today.</p>
+    </div>
+    <div class="timeline-item">
+      <div class="time">Day 1–3</div>
+      <h4>Knowledge Base Build</h4>
+      <p>We compile all SFSBI services, pricing, processes, FAQs from the website and your input. This trains the AI.</p>
+    </div>
+    <div class="timeline-item">
+      <div class="time">Day 3–5</div>
+      <h4>AI Voice Agent + Omnichannel Integration</h4>
+      <p>Phone forwarding configured. Instagram, Facebook, WhatsApp, website chat connected. Bilingual tested.</p>
+    </div>
+    <div class="timeline-item">
+      <div class="time">Day 5–7</div>
+      <h4>Allurion Landing Page + Waitlist</h4>
+      <p>Dedicated page live. AI qualification chatbot embedded. Retargeting pixel installed.</p>
+    </div>
+    <div class="timeline-item">
+      <div class="time">Day 7–10</div>
+      <h4>Nurture Sequence Built</h4>
+      <p>6-month drip campaign written, translated, and loaded. Bilingual. Dr. V reviews and approves all content.</p>
+    </div>
+    <div class="timeline-item">
+      <div class="time">Day 10–14</div>
+      <h4>7-Day Live Trial Begins</h4>
+      <p>All systems live. Real calls, real DMs, real leads flowing. Daily reporting to Sheena + Dr. V.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 9: INVESTMENT -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="logo-bar">SFSBI</div>
+  <div class="slide-number">08 / INVESTMENT</div>
+
+  <div class="section-label">Pricing</div>
+  <h2>Two components. <span>Simple.</span></h2>
+
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="section-label">One-Time</div>
+      <h3>Build & Setup</h3>
+      <div class="price">$5,000</div>
+      <ul class="includes">
+        <li>Email security remediation (DMARC, SPF, domain redirect)</li>
+        <li>AI Voice Agent — trained on SFSBI services, bilingual</li>
+        <li>Omnichannel integration (Phone + IG + FB + WhatsApp + TikTok + Web)</li>
+        <li>Allurion landing page + AI waitlist system</li>
+        <li>6-month bilingual nurture sequence</li>
+        <li>Spam detection + lead scoring logic</li>
+        <li>Human handoff configuration</li>
+        <li>QC dashboard + daily reporting</li>
+        <li>7-day live trial included</li>
+      </ul>
+    </div>
+    <div class="price-card featured">
+      <div class="section-label">Monthly</div>
+      <h3>Monitoring & Optimization</h3>
+      <div class="price">$997 <span>/month</span></div>
+      <ul class="includes">
+        <li>24/7 AI agent uptime + maintenance</li>
+        <li>Monthly performance reporting</li>
+        <li>Security monitoring (catch intrusions early)</li>
+        <li>Nurture sequence optimization based on data</li>
+        <li>AI retraining as services/pricing change</li>
+        <li>Priority support — direct line to our team</li>
+        <li>New agent builds as you scale (reviews, GLP-1 upsell, etc.)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="success-box" style="margin-top: 20px;">
+    <h4>Break-Even Math</h4>
+    <p>
+      One recovered surgical patient ($2,000–$8,000) covers the monthly cost
+      for 2–8 months. One Allurion procedure ($5,000–$8,000) covers the
+      entire setup fee. The system pays for itself with the first patient it captures.
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 10: NEXT STEPS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide" style="text-align: center; align-items: center;">
+  <div class="logo-bar">SFSBI</div>
+  <div class="slide-number">09 / NEXT STEPS</div>
+
+  <div class="section-label">Let's Get Started</div>
+  <h2>From this call to <span>live results</span></h2>
+
+  <div style="text-align: left; max-width: 600px; margin: 40px auto;">
+    <div class="card-grid" style="grid-template-columns: 1fr;">
+      <div class="card">
+        <h4>1. Today</h4>
+        <p>If this makes sense, we start the email security fix immediately — no cost, no commitment.</p>
+      </div>
+      <div class="card">
+        <h4>2. This Week</h4>
+        <p>Our team reaches out to Sheena for knowledge base input (services, pricing, common questions). 30-minute call max.</p>
+      </div>
+      <div class="card">
+        <h4>3. Next Week</h4>
+        <p>AI agent built, tested, and ready for your review. You approve the voice, tone, and responses before anything goes live.</p>
+      </div>
+      <div class="card">
+        <h4>4. 7-Day Trial</h4>
+        <p>Live with real calls and real DMs. Daily reporting. If it doesn't perform — no obligation to continue.</p>
+      </div>
+    </div>
+  </div>
+
+  <p style="font-size: 18px; color: var(--text-dim); margin-top: 40px;">
+    Questions? Let's discuss.
+  </p>
+</div>
+
+</body>
+</html>

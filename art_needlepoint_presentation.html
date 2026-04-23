@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Art Needlepoint — AI Operations Proposal</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --green: #2c5f2e;
+    --green-light: #3a7d3d;
+    --green-pale: #e8f5e9;
+    --gold: #c9a84c;
+    --gold-pale: #fdf6e3;
+    --dark: #1a1f2e;
+    --charcoal: #2d3748;
+    --slate: #4a5568;
+    --muted: #718096;
+    --light: #f7fafc;
+    --white: #ffffff;
+    --red: #e53e3e;
+    --blue: #3182ce;
+    --purple: #805ad5;
+    --amber: #d69e2e;
+    --teal: #319795;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--dark);
+    color: var(--charcoal);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* ─── Slide Container ─── */
+  .deck { position: relative; width: 100vw; height: 100vh; }
+
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    transform: translateX(40px);
+    overflow-y: auto;
+  }
+  .slide.active {
+    opacity: 1; visibility: visible;
+    transform: translateX(0);
+  }
+
+  /* ─── Navigation ─── */
+  .nav-bar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 32px;
+    background: rgba(26, 31, 46, 0.95);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .nav-bar .counter { color: rgba(255,255,255,0.5); font-size: 13px; font-weight: 500; }
+  .nav-bar .brand { color: var(--gold); font-size: 12px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; }
+  .nav-btn {
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+    color: white; padding: 8px 20px; border-radius: 8px; cursor: pointer;
+    font-size: 13px; font-weight: 500; transition: all 0.2s;
+  }
+  .nav-btn:hover { background: var(--green); border-color: var(--green); }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .nav-btn:disabled:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.15); }
+  .nav-btns { display: flex; gap: 8px; }
+
+  /* Progress bar */
+  .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: var(--green); z-index: 101; transition: width 0.4s ease; }
+
+  /* ─── Shared Slide Styles ─── */
+  .slide-dark { background: var(--dark); color: white; }
+  .slide-white { background: var(--white); color: var(--charcoal); padding: 60px 80px 100px; }
+  .slide-light { background: var(--light); color: var(--charcoal); padding: 60px 80px 100px; }
+  .slide-green { background: linear-gradient(135deg, var(--green) 0%, #1a4a1c 100%); color: white; }
+
+  .slide-header { margin-bottom: 40px; }
+  .slide-header .tag {
+    display: inline-block; padding: 4px 14px; border-radius: 20px;
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .tag-green { background: var(--green-pale); color: var(--green); }
+  .tag-gold { background: var(--gold-pale); color: #8b6914; }
+  .tag-red { background: #fff5f5; color: var(--red); }
+  .tag-blue { background: #ebf8ff; color: var(--blue); }
+  .tag-purple { background: #faf5ff; color: var(--purple); }
+  .tag-white { background: rgba(255,255,255,0.15); color: white; }
+
+  .slide-header h2 { font-size: 38px; font-weight: 800; line-height: 1.15; margin-bottom: 12px; }
+  .slide-header p { font-size: 17px; color: var(--muted); line-height: 1.6; max-width: 680px; }
+  .slide-dark .slide-header p { color: rgba(255,255,255,0.6); }
+
+  /* Grid systems */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px; }
+  .grid-5 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 16px; }
+
+  /* Cards */
+  .card {
+    background: white; border: 1px solid #e2e8f0; border-radius: 16px;
+    padding: 28px; transition: all 0.3s; position: relative; overflow: hidden;
+  }
+  .card:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.08); transform: translateY(-2px); }
+  .card-dark {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px; padding: 28px;
+  }
+  .card .icon { font-size: 32px; margin-bottom: 16px; display: block; }
+  .card h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+  .card .accent-bar { position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+
+  /* Stats */
+  .stat { text-align: center; }
+  .stat .number { font-size: 42px; font-weight: 900; line-height: 1; margin-bottom: 6px; }
+  .stat .label { font-size: 13px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .slide-dark .stat .label { color: rgba(255,255,255,0.5); }
+
+  /* Flow diagrams */
+  .flow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .flow-step {
+    background: white; border: 2px solid #e2e8f0; border-radius: 12px;
+    padding: 14px 20px; font-size: 13px; font-weight: 600; text-align: center;
+    min-width: 130px; position: relative;
+  }
+  .flow-step .sub { font-size: 11px; font-weight: 400; color: var(--muted); margin-top: 4px; }
+  .flow-arrow { color: var(--green); font-size: 22px; font-weight: 700; }
+
+  /* Timeline */
+  .timeline { position: relative; padding-left: 40px; }
+  .timeline::before { content: ''; position: absolute; left: 14px; top: 0; bottom: 0; width: 2px; background: #e2e8f0; }
+  .timeline-item { position: relative; margin-bottom: 28px; }
+  .timeline-item::before {
+    content: ''; position: absolute; left: -33px; top: 6px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--green); border: 3px solid white; box-shadow: 0 0 0 2px var(--green);
+  }
+  .timeline-item h4 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .timeline-item p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+  .timeline-item .time { font-size: 11px; font-weight: 600; color: var(--green); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+
+  /* Quote block */
+  .quote {
+    border-left: 4px solid var(--gold); padding: 20px 28px;
+    background: var(--gold-pale); border-radius: 0 12px 12px 0;
+    font-size: 16px; font-style: italic; color: #5a4a1a; line-height: 1.6;
+  }
+  .quote .attribution { font-style: normal; font-size: 13px; font-weight: 600; color: #8b6914; margin-top: 10px; }
+
+  /* Table */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .tbl th { text-align: left; padding: 12px 16px; background: var(--light); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); border-bottom: 2px solid #e2e8f0; }
+  .tbl td { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+  .tbl tr:hover td { background: #fafbfc; }
+
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 600;
+  }
+  .badge-green { background: var(--green-pale); color: var(--green); }
+  .badge-red { background: #fff5f5; color: var(--red); }
+  .badge-blue { background: #ebf8ff; color: var(--blue); }
+  .badge-gold { background: var(--gold-pale); color: #8b6914; }
+  .badge-purple { background: #faf5ff; color: var(--purple); }
+
+  /* Hero special */
+  .hero-center {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100vh; text-align: center; padding: 60px;
+  }
+  .hero-center h1 { font-size: 56px; font-weight: 900; line-height: 1.1; margin-bottom: 20px; }
+  .hero-center .subtitle { font-size: 20px; opacity: 0.7; max-width: 600px; line-height: 1.5; }
+  .hero-center .logo { width: 80px; height: 80px; border-radius: 20px; margin-bottom: 32px; object-fit: cover; }
+  .hero-center .prepared { font-size: 13px; opacity: 0.4; margin-top: 40px; letter-spacing: 1px; text-transform: uppercase; }
+  .hero-center .by { font-size: 15px; opacity: 0.6; margin-top: 8px; }
+
+  /* Section divider */
+  .section-divider {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100vh; text-align: center; padding: 60px;
+  }
+  .section-divider .section-num { font-size: 80px; font-weight: 900; opacity: 0.1; margin-bottom: -20px; }
+  .section-divider h2 { font-size: 48px; font-weight: 800; margin-bottom: 16px; }
+  .section-divider p { font-size: 18px; opacity: 0.6; max-width: 500px; }
+
+  /* Metric highlight row */
+  .metric-row { display: flex; gap: 24px; margin: 24px 0; }
+  .metric-box {
+    flex: 1; background: white; border: 1px solid #e2e8f0; border-radius: 14px;
+    padding: 24px; text-align: center;
+  }
+  .metric-box .val { font-size: 36px; font-weight: 900; line-height: 1; }
+  .metric-box .lbl { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 6px; }
+
+  .text-green { color: var(--green); }
+  .text-gold { color: var(--gold); }
+  .text-red { color: var(--red); }
+  .text-blue { color: var(--blue); }
+  .text-purple { color: var(--purple); }
+  .text-amber { color: var(--amber); }
+
+  .mt-8 { margin-top: 8px; } .mt-16 { margin-top: 16px; } .mt-24 { margin-top: 24px; } .mt-32 { margin-top: 32px; }
+  .mb-16 { margin-bottom: 16px; } .mb-24 { margin-bottom: 24px; }
+  .text-sm { font-size: 13px; } .text-xs { font-size: 11px; }
+  .fw-600 { font-weight: 600; } .fw-700 { font-weight: 700; }
+  .opacity-60 { opacity: 0.6; }
+
+  /* Keyboard hint */
+  .key-hint {
+    position: fixed; bottom: 70px; right: 32px; z-index: 100;
+    font-size: 11px; color: rgba(255,255,255,0.3);
+  }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="deck" id="deck">
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 1: TITLE -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide slide-green active" data-slide="0">
+  <div class="hero-center">
+    <img src="artneedlepoint_logo.png" class="logo" alt="Art Needlepoint" onerror="this.style.display='none'">
+    <h1>Project Hermes</h1>
+    <p class="subtitle">AI-Powered Operations System for The Art Needlepoint Company — Revenue Recovery, SEO Restoration, Review Intelligence & Customer Experience</p>
+    <p class="prepared">Prepared for</p>
+    <p class="by">Doreen &amp; The Art Needlepoint Team</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 2: THE SITUATION -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide slide-white" data-slide="1">
+  <div class="slide-header">
+    <span class="tag tag-red">Current Situation</span>
+    <h2>Where Art Needlepoint Stands Today</h2>
+    <p>30+ years of excellence — facing modern digital threats that require an automated defense and growth system.</p>
+  </div>
+
+  <div class="grid-4" style="margin-bottom: 32px;">
+    <div class="metric-box">
+      <div class="val text-green">7,935</div>
+      <div class="lbl">Products</div>
+    </div>
+    <div class="metric-box">
+      <div class="val text-blue">25K</div>
+      <div class="lbl">Email Subscribers</div>
+    </div>
+    <div class="metric-box">
+      <div class="val text-purple">320</div>
+      <div class="lbl">Orders / Month</div>
+    </div>
+    <div class="metric-box">
+      <div class="val text-gold">$180</div>
+      <div class="lbl">Avg. Order Value</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--red);">🚨 Critical Threats</h3>
+      <div style="space-y: 12px;">
+        <div class="card" style="margin-bottom: 12px; border-left: 4px solid var(--red);">
+          <h3 style="font-size: 15px;">Site Hacked — 279 Casino Spam Posts</h3>
+          <p>Author "andevtemp" injected gambling content. Google penalized the entire domain.</p>
+        </div>
+        <div class="card" style="margin-bottom: 12px; border-left: 4px solid var(--amber);">
+          <h3 style="font-size: 15px;">Rankings Collapsed: #2 → #14</h3>
+          <p>"Needlepoint kits" dropped 12 positions after 2023 HCU + 2025 hack.</p>
+        </div>
+        <div class="card" style="border-left: 4px solid var(--red);">
+          <h3 style="font-size: 15px;">Index Coverage: 1,847 → 10 Pages</h3>
+          <p>99.5% of pages de-indexed. Nearly invisible to Google.</p>
+        </div>
+      </div>
+    </div>
+    <div>
+      <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--green);">💰 Revenue at Risk</h3>
+      <div class="card" style="background: var(--green-pale); border: 2px solid var(--green);">
+        <div class="stat" style="margin-bottom: 16px;">
+          <div class="number text-green">$57,600</div>
+          <div class="label" style="color: var(--green); font-weight: 600;">Monthly Baseline Revenue</div>
+        </div>
+        <p style="font-size: 14px; color: var(--charcoal); text-align: center; line-height: 1.6;">
+          $180 AOV × 320 orders = $57.6K/mo<br>
+          <strong>With SEO restored + recovery automation:</strong><br>
+          <span style="font-size: 24px; font-weight: 800; color: var(--green);">$86,400/mo potential</span>
+        </p>
+      </div>
+      <div class="quote mt-16">
+        "I need to see the writing."
+        <div class="attribution">— Doreen, on approving all customer-facing content</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 3: SECTION — THE SOLUTION -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide slide-dark" data-slide="2">
+  <div class="section-divider">
+    <div class="section-num">01</div>
+    <h2>The Solution</h2>
+    <p>Five AI agents working 24/7, managed by a single command center — all under Doreen's final approval.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 4: MEET THE AGENT TEAM -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide slide-white" data-slide="3">
+  <div class="slide-header">
+    <span class="tag tag-green">The Agent Team</span>
+    <h2>Meet Your AI Operations Crew</h2>
+    <p>Five specialized agents — each handling a critical business function, coordinated by Hermes command center.</p>
+  </div>
+
+  <div class="grid-5">
+    <div class="card" style="text-align: center;">
+      <div class="accent-bar" style="background: #059669;"></div>
+      <span class="icon">💰</span>
+      <h3>ATLAS</h3>
+      <p style="font-size: 12px; font-weight: 600; color: #059669; margin-bottom: 8px;">Revenue Recovery</p>
+      <p style="font-size: 12px;">Monitors failed payments, cart abandonment. Sends recovery emails within 1 hour.</p>
+    </div>
+    <div class="card" style="text-align: center;">
+      <div class="accent-bar" style="background: #805ad5;"></div>
+      <span class="icon">⭐</span>
+      <h3>IRIS</h3>
+      <p style="font-size: 12px; font-weight: 600; color: #805ad5; margin-bottom: 8px;">Review Intelligence</p>
+      <p style="font-size: 12px;">AI sentiment scoring. Routes happy → review queue, unhappy → Doreen privately.</p>
+    </div>
+    <div class="card" style="text-align: center;">
+      <div class="accent-bar" style="background: #3182ce;"></div>
+      <span class="icon">📧</span>
+      <h3>ECHO</h3>
+      <p style="font-size: 12px; font-weight: 600; color: #3182ce; margin-bottom: 8px;">Email Automation</p>
+      <p style="font-size: 12px;">Personalized emails using customers' own words. MailChimp sequences. Win-back campaigns.</p>
+    </div>
+    <div class="card" style="text-align: center;">
+      <div class="accent-bar" style="background: #d69e2e;"></div>
+      <span class="icon">🔍</span>
+      <h3>SCOUT</h3>
+      <p style="font-size: 12px; font-weight: 600; color: #d69e2e; margin-bottom: 8px;">SEO Watchdog</p>
+      <p style="font-size: 12px;">Daily ranking checks. Index monitoring. Instant spam detection alerts.</p>
+    </div>
+    <div class="card" style="text-align: center;">
+      <div class="accent-bar" style="background: var(--gold);"></div>
+      <span class="icon">📝</span>
+      <h3>HERALD</h3>
+      <p style="font-size: 12px; font-weight: 600; color: var(--gold); margin-bottom: 8px;">Content Publisher</p>
+      <p style="font-size: 12px;">Generates category pages, title tags, meta descriptions. Doreen approves all.</p>
+    </div>
+  </div>
+
+  <div class="card mt-32" style="background: var(--light); border: 2px solid #e2e8f0;">
+    <h3 style="font-size: 15px; margin-bottom: 12px;">🛡️ Doreen's Approval Gate — Nothing Goes Out Without Her</h3>
+    <p style="font-size: 14px; line-height: 1.7;">
+      Every customer-facing email, review request, and published page passes through Doreen's approval queue. She reviews the AI-generated content, clicks <strong>Approve</strong> or <strong>Reject</strong>, and only then does it reach the customer. The brand voice stays warm, expert, and artisan — never corporate or pushy.
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 5: SECTION — WORKFLOWS -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide slide-dark" data-slide="4">
+  <div class="section-divider">
+    <div class="section-num">02</div>
+    <h2>Workflow Automation</h2>
+    <p>Four production-ready n8n workflows — built, validated, and waiting for your credentials to go live.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 6: WORKFLOW 1 — REVIEW PIPELINE -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide slide-white" data-slide="5">
+  <div class="slide-header">
+    <span class="tag tag-purple">Workflow 1A + 1B</span>
+    <h2>Intelligent Review Collection Pipeline</h2>
+    <p>Turn happy customers into Google reviewers — automatically, with Doreen's personal touch preserved.</p>
+  </div>
+
+  <div class="flow" style="margin-bottom: 32px; justify-content: center;">
+    <div class="flow-step" style="border-color: var(--purple);">
+      📋 Read Backlog
+      <div class="sub">Happy customers</div>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step" style="border-color: var(--blue);">
+      🤖 GPT-4o Draft
+      <div class="sub">Personalized email</div>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step" style="border-color: var(--gold);">
+      👀 Doreen Reviews
+      <div class="sub">Approve / Reject</div>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step" style="border-color: var(--green);">
+      ✉️ Send Email
+      <div class="sub">Review request</div>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step" style="border-color: #059669;">
+      ⭐ Google Review
+      <div class="sub">5-star rating</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <h3 style="font-size: 16px; margin-bottom: 16px;">How It Works</h3>
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="time">Step 1 — WF1A</div>
+          <h4>Reads customer backlog</h4>
+          <p>Pulls customers with positive sentiment from the Backlog sheet (fed by WF2).</p>
+        </div>
+        <div class="timeline-item">
+          <div class="time">Step 2 — GPT-4o</div>
+          <h4>Generates personalized email</h4>
+          <p>Uses the customer's own testimonial words — "The colors are even more vibrant than the photo" becomes the email hook.</p>
+        </div>
+        <div class="timeline-item">
+          <div class="time">Step 3 — Approval</div>
+          <h4>Doreen reviews every draft</h4>
+          <p>Set status to APPROVED or REJECTED in Google Sheets. Nothing sends without her say-so.</p>
+        </div>
+        <div class="timeline-item">
+          <div class="time">Step 4 — WF1B</div>
+          <h4>Sends approved emails only</h4>
+          <p>Picks up APPROVED rows, sends the email, marks as SENT. Clean audit trail.</p>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="quote mb-24">
+        "Hi Margaret, we hope you're enjoying your Tropical Parrot Canvas! Your words made our day — 'The colors are even more vibrant than the photo.' Would you share that experience on Google? It means the world to our small team."
+        <div class="attribution">— AI-generated draft (Doreen approves before send)</div>
+      </div>
+      <div class="card" style="background: var(--green-pale);">
+        <h3 style="font-size: 15px; color: var(--green);">Why This Matters</h3>
+        <ul style="font-size: 13px; line-height: 1.8; color: var(--charcoal); padding-left: 18px; margin-top: 8px;">
+          <li>Currently only <strong>35 Google reviews</strong> — target is 100+</li>
+          <li>Personalized emails get <strong>3-5× higher response</strong> than generic templates</li>
+          <li>Only happy customers (score ≥ 8) get asked — protects your rating</li>
+          <li>Unhappy customers routed to Doreen privately for personal care</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 7: WORKFLOW 2 — SENTIMENT ROUTER -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide slide-light" data-slide="6">
+  <div class="slide-header">
+    <span class="tag tag-blue">Workflow 2</span>
+    <h2>Live Sentiment Router</h2>
+    <p>Every incoming customer email is scored by AI in real-time — happy customers feed your review pipeline, concerns reach Doreen instantly.</p>
+  </div>
+
+  <div class="flow" style="margin-bottom: 32px; justify-content: center;">
+    <div class="flow-step" style="border-color: var(--blue);">
+      📨 Email Arrives
+      <div class="sub">Webhook trigger</div>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step" style="border-color: var(--purple);">
+      🤖 GPT-4o Scores
+      <div class="sub">Sentiment 1-10</div>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step" style="border-color: var(--green);">
+      <div style="font-size: 11px; color: var(--green); font-weight: 700;">Score ≥ 8</div>
+      Add to Backlog
+      <div class="sub">→ Review pipeline</div>
+    </div>
+  </div>
+  <div class="flow" style="justify-content: center; margin-top: -8px; margin-bottom: 32px;">
+    <div style="width: 320px;"></div>
+    <div class="flow-step" style="border-color: var(--red);">
+      <div style="font-size: 11px; color: var(--red); font-weight: 700;">Score < 8</div>
+      Alert Doreen
+      <div class="sub">Private notification</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>What GPT-4o Analyzes</h3>
+      <table class="tbl mt-16">
+        <tr><td><strong>Sentiment Score</strong></td><td>1 (furious) → 10 (ecstatic)</td></tr>
+        <tr><td><strong>Customer Name</strong></td><td>Extracted from email</td></tr>
+        <tr><td><strong>Product Mentioned</strong></td><td>Identified from context</td></tr>
+        <tr><td><strong>Issue Type</strong></td><td>praise, question, complaint, return</td></tr>
+        <tr><td><strong>Testimonial Text</strong></td><td>Key quote pulled for personalized reply</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Routing Intelligence</h3>
+      <div style="margin-top: 16px;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding: 12px; background: var(--green-pale); border-radius: 10px;">
+          <span style="font-size: 28px;">😊</span>
+          <div>
+            <p style="font-size: 14px; font-weight: 700; color: var(--green);">Score 8-10 → Review Pipeline</p>
+            <p style="font-size: 12px; color: var(--muted);">Added to Backlog for WF1A to generate a review email</p>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: #fff5f5; border-radius: 10px;">
+          <span style="font-size: 28px;">😟</span>
+          <div>
+            <p style="font-size: 14px; font-weight: 700; color: var(--red);">Score 1-7 → Doreen Alert</p>
+            <p style="font-size: 12px; color: var(--muted);">Private email to Doreen with full context. Never ask unhappy customers for reviews.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 8: WORKFLOW 3 — CART ABANDONMENT -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide slide-white" data-slide="7">
+  <div class="slide-header">
+    <span class="tag tag-green">Workflow 3</span>
+    <h2>Cart Abandonment Recovery</h2>
+    <p>3-touch email sequence that recovers lost revenue — with smart incentives based on cart contents.</p>
+  </div>
+
+  <div class="grid-3" style="margin-bottom: 32px;">
+    <div class="card" style="text-align: center; border-top: 4px solid var(--blue);">
+      <div style="font-size: 14px; font-weight: 800; color: var(--blue); margin-bottom: 4px;">TOUCH 1</div>
+      <div style="font-size: 28px; margin-bottom: 8px;">🕐</div>
+      <h3>1 Hour</h3>
+      <p style="font-size: 13px; margin-top: 8px;">"Your Jolly Santa Stocking Kit is waiting — we're holding it just for you."</p>
+      <p style="font-size: 11px; color: var(--muted); margin-top: 8px;">Gentle, warm reminder</p>
+    </div>
+    <div class="card" style="text-align: center; border-top: 4px solid var(--purple);">
+      <div style="font-size: 14px; font-weight: 800; color: var(--purple); margin-bottom: 4px;">TOUCH 2</div>
+      <div style="font-size: 28px; margin-bottom: 8px;">📸</div>
+      <h3>24 Hours</h3>
+      <p style="font-size: 13px; margin-top: 8px;">Finished project photos + FAQ + "Here's what other stitchers say about this kit."</p>
+      <p style="font-size: 11px; color: var(--muted); margin-top: 8px;">Social proof &amp; reassurance</p>
+    </div>
+    <div class="card" style="text-align: center; border-top: 4px solid var(--gold);">
+      <div style="font-size: 14px; font-weight: 800; color: var(--gold); margin-bottom: 4px;">TOUCH 3</div>
+      <div style="font-size: 28px; margin-bottom: 8px;">🎁</div>
+      <h3>72 Hours</h3>
+      <p style="font-size: 13px; margin-top: 8px;">Smart incentive based on cart contents — different approach for different carts.</p>
+      <p style="font-size: 11px; color: var(--muted); margin-top: 8px;">Personalized closing</p>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card" style="background: var(--gold-pale); border: 2px solid var(--gold);">
+      <h3 style="font-size: 15px; color: #8b6914;">🛒 2+ Items → BOGO Offer</h3>
+      <p style="font-size: 13px; margin-top: 8px; line-height: 1.6;">
+        "You already have 3 beautiful kits in your cart — we'd love to add a 4th on us. Complete your collection before they're gone."
+      </p>
+    </div>
+    <div class="card" style="background: #fff5f5; border: 2px solid #feb2b2;">
+      <h3 style="font-size: 15px; color: var(--red);">🎯 1 Item → Urgency</h3>
+      <p style="font-size: 13px; margin-top: 8px; line-height: 1.6;">
+        "Your Monogram Belt Canvas won't be held much longer — Doreen hand-selects every design and this one is a favorite."
+      </p>
+    </div>
+  </div>
+
+  <div class="metric-row mt-24">
+    <div class="metric-box">
+      <div class="val text-green">25%</div>
+      <div class="lbl">Target Recovery Rate</div>
+    </div>
+    <div class="metric-box">
+      <div class="val text-blue">$7,200</div>
+      <div class="lbl">Est. Monthly Recovery</div>
+    </div>
+    <div class="metric-box">
+      <div class="val text-purple">< 1hr</div>
+      <div class="lbl">First Touch Speed</div>
+    </div>
+    <div class="metric-box">
+      <div class="val text-gold">Auto</div>
+      <div class="lbl">Stops If Order Placed</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 9: SECTION — BREAKTHROUGHS -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide slide-dark" data-slide="8">
+  <div class="section-divider">
+    <div class="section-num">03</div>
+    <h2>The Breakthroughs</h2>
+    <p>Two innovations that unlock hidden revenue and prove what your newsletter is really worth.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 10: BREAKTHROUGH 3 — SILENT MAJORITY -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide slide-white" data-slide="9">
+  <div class="slide-header">
+    <span class="tag tag-purple">Breakthrough 3</span>
+    <h2>The Silent Majority Activator</h2>
+  </div>
+
+  <div class="quote mb-24">
+    "Way more people buy than talk to us. And by talk, I mean email or phone."
+    <div class="attribution">— Doreen</div>
+  </div>
+
+  <p style="font-size: 16px; line-height: 1.7; max-width: 700px; margin-bottom: 32px;">
+    320 orders/month. Most people buy, receive their kit, and <strong>disappear into silence for months</strong> while they stitch. You have no idea if they're happy, stuck, or gave up. This agent changes that — with <strong>product-aware timing</strong>.
+  </p>
+
+  <div class="grid-3" style="margin-bottom: 32px;">
+    <div class="card" style="text-align: center; border-top: 4px solid var(--blue);">
+      <h3>Small Projects</h3>
+      <p style="font-size: 12px; color: var(--muted); margin-bottom: 12px;">Ornaments, coasters, accessories</p>
+      <div class="stat">
+        <div class="number text-blue">3 wks</div>
+        <div class="label">Check-in</div>
+      </div>
+      <p style="font-size: 11px; color: var(--muted); margin-top: 8px;">Recheck at 6 wks if no reply</p>
+    </div>
+    <div class="card" style="text-align: center; border-top: 4px solid var(--purple);">
+      <h3>Medium Kits</h3>
+      <p style="font-size: 12px; color: var(--muted); margin-bottom: 12px;">Pillows, belts ($100-200)</p>
+      <div class="stat">
+        <div class="number text-purple">8 wks</div>
+        <div class="label">Check-in</div>
+      </div>
+      <p style="font-size: 11px; color: var(--muted); margin-top: 8px;">Recheck at 16 wks if no reply</p>
+    </div>
+    <div class="card" style="text-align: center; border-top: 4px solid var(--gold);">
+      <h3>Large Masterpieces</h3>
+      <p style="font-size: 12px; color: var(--muted); margin-bottom: 12px;">Rugs, landscapes ($200+)</p>
+      <div class="stat">
+        <div class="number text-amber">16 wks</div>
+        <div class="label">Check-in</div>
+      </div>
+      <p style="font-size: 11px; color: var(--muted); margin-top: 8px;">Recheck at 32 wks if no reply</p>
+    </div>
+  </div>
+
+  <div class="quote" style="border-left-color: var(--purple);">
+    "It can take somebody six months to finish some of these things."
+    <div class="attribution">— Doreen, explaining why generic 3-week check-ins don't work for needlepoint</div>
+  </div>
+
+  <h3 style="font-size: 15px; margin-top: 28px; margin-bottom: 16px;">What Happens When They Respond</h3>
+  <div class="grid-4">
+    <div class="card" style="text-align: center; padding: 20px;">
+      <span style="font-size: 28px;">😊</span>
+      <p style="font-size: 13px; font-weight: 700; margin-top: 8px;">Positive</p>
+      <p style="font-size: 11px; color: var(--muted); margin-top: 4px;">→ Queue for review ask</p>
+    </div>
+    <div class="card" style="text-align: center; padding: 20px;">
+      <span style="font-size: 28px;">🆘</span>
+      <p style="font-size: 13px; font-weight: 700; margin-top: 8px;">Stuck</p>
+      <p style="font-size: 11px; color: var(--muted); margin-top: 4px;">→ Route to Doreen's team</p>
+    </div>
+    <div class="card" style="text-align: center; padding: 20px;">
+      <span style="font-size: 28px;">📸</span>
+      <p style="font-size: 13px; font-weight: 700; margin-top: 8px;">Finished!</p>
+      <p style="font-size: 11px; color: var(--muted); margin-top: 4px;">→ Strut Your Stitches photo</p>
+    </div>
+    <div class="card" style="text-align: center; padding: 20px;">
+      <span style="font-size: 28px;">🔇</span>
+      <p style="font-size: 13px; font-weight: 700; margin-top: 8px;">No Response</p>
+      <p style="font-size: 11px; color: var(--muted); margin-top: 4px;">→ Soft recheck at 2× timeline</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 11: BREAKTHROUGH 4 — MAILCHIMP FIX -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide slide-light" data-slide="10">
+  <div class="slide-header">
+    <span class="tag tag-blue">Breakthrough 4</span>
+    <h2>The MailChimp Revenue Fix</h2>
+  </div>
+
+  <div class="quote mb-24">
+    "None of the revenue is accurate. Never has been. Because they're looking for them to click off the newsletter. They don't always do that. They just come to the site."
+    <div class="attribution">— Doreen</div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom: 32px;">
+    <div>
+      <h3 style="font-size: 16px; margin-bottom: 16px; color: var(--red);">❌ The Problem</h3>
+      <div class="card" style="border-left: 4px solid var(--red);">
+        <p style="font-size: 14px; line-height: 1.7;">
+          MailChimp only tracks revenue when someone <strong>clicks a link</strong> in the email and then purchases. But your customers <strong>read the email</strong>, then manually navigate to artneedlepoint.com. MailChimp shows <strong>$0 revenue</strong> — making the newsletter look worthless.
+        </p>
+      </div>
+      <h3 style="font-size: 16px; margin: 24px 0 16px; color: var(--green);">✅ The Fix</h3>
+      <div class="timeline">
+        <div class="timeline-item">
+          <h4>Add UTM parameters to every link</h4>
+          <p>In "Mondays with Needlepoint" — proper tracking on all URLs.</p>
+        </div>
+        <div class="timeline-item">
+          <h4>Configure attribution window</h4>
+          <p>WooCommerce + Google Analytics integration with 48-hour window.</p>
+        </div>
+        <div class="timeline-item">
+          <h4>Cross-reference opens → orders</h4>
+          <p>MailChimp "opened" timestamp ↔ WooCommerce orders within 48 hours by same email.</p>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="background: linear-gradient(135deg, #ebf8ff, #e9f5ff); border: 2px solid var(--blue);">
+        <h3 style="font-size: 18px; text-align: center; margin-bottom: 20px; color: var(--blue);">📊 What You'll See</h3>
+        <table class="tbl">
+          <thead><tr><th>Week</th><th>Opened</th><th>Orders (48hr)</th><th>Revenue</th></tr></thead>
+          <tbody>
+            <tr><td>Mar 4</td><td>9,920</td><td>42</td><td style="font-weight: 700; color: var(--green);">$7,560</td></tr>
+            <tr><td>Mar 11</td><td>10,209</td><td>38</td><td style="font-weight: 700; color: var(--green);">$6,840</td></tr>
+            <tr><td>Mar 18</td><td>9,980</td><td>45</td><td style="font-weight: 700; color: var(--green);">$8,100</td></tr>
+            <tr><td>Mar 25</td><td>10,500</td><td>51</td><td style="font-weight: 700; color: var(--green);">$9,180</td></tr>
+            <tr><td>Apr 1</td><td>10,271</td><td>47</td><td style="font-weight: 700; color: var(--green);">$8,460</td></tr>
+            <tr><td>Apr 8</td><td>10,542</td><td>53</td><td style="font-weight: 700; color: var(--green);">$9,540</td></tr>
+          </tbody>
+        </table>
+        <div style="text-align: center; margin-top: 20px; padding: 16px; background: white; border-radius: 12px;">
+          <p style="font-size: 13px; color: var(--muted); margin-bottom: 4px;">6-Week Attributed Revenue</p>
+          <p style="font-size: 36px; font-weight: 900; color: var(--green);">$49,680</p>
+          <p style="font-size: 13px; color: var(--blue); font-weight: 600; margin-top: 4px;">MailChimp was showing: $0</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="background: var(--green-pale); border: 2px solid var(--green);">
+    <p style="font-size: 15px; text-align: center; line-height: 1.6;">
+      <strong>When you see "Mondays with Needlepoint drove $12K last month,"</strong> you'll invest more in email. That's the leverage.
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 12: SECTION — DASHBOARD -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide slide-dark" data-slide="11">
+  <div class="section-divider">
+    <div class="section-num">04</div>
+    <h2>The Command Center</h2>
+    <p>One dashboard to see everything — agents, revenue, SEO, reviews, and approvals.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 13: HERMES DASHBOARD -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide slide-white" data-slide="12">
+  <div class="slide-header">
+    <span class="tag tag-green">Hermes Dashboard</span>
+    <h2>Your Daily Operations View</h2>
+    <p>10 purpose-built pages — everything Doreen and your team need, nothing they don't.</p>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <table class="tbl">
+        <thead><tr><th>Page</th><th>What It Shows</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-green">Morning Brief</span></td>
+            <td>Revenue, SEO health, reviews, recovery stats, active alerts — your daily snapshot</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-blue">Agent Team</span></td>
+            <td>Status of all 5 AI agents — what they did today, tasks completed, live/idle/alert</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-gold">SEO Report</span></td>
+            <td>Keyword rankings vs. last week, index coverage trend, spam page detection log</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-green">Revenue Recovery</span></td>
+            <td>Recovery funnel, weekly trends, failed payment status, revenue opportunity calc</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-purple">Review Pipeline</span></td>
+            <td>Sentiment scores, pipeline progress, all review requests with approval status</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-purple">Milestone Agent</span></td>
+            <td>Product-aware check-ins — who's stitching, who's stuck, who finished</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-blue">MailChimp Attribution</span></td>
+            <td>True newsletter revenue — opens cross-referenced with orders within 48 hours</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-gold">Content Queue</span></td>
+            <td>Doreen's approval queue — review every draft, approve or reject with one click</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-green">Cart Abandonment</span></td>
+            <td>Active recovery sequences, touch progress, BOGO vs. urgency logic</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-blue">Settings</span></td>
+            <td>Workflow IDs, credential status, placeholders, Google Sheet schema</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="card" style="background: var(--dark); color: white; margin-bottom: 20px;">
+        <h3 style="color: var(--gold); font-size: 14px; margin-bottom: 16px;">📊 DAILY BRIEFING FORMAT</h3>
+        <div style="font-family: monospace; font-size: 13px; line-height: 2; opacity: 0.9;">
+          <p>📊 Revenue: 11 orders today / 68 this week / $44.5K MTD</p>
+          <p>🔍 SEO: 10 indexed pages / "needlepoint kits" at #14</p>
+          <p>⭐ Reviews: 2 new / 8 pending / 4.3 avg rating</p>
+          <p>🛒 Recovery: 12 abandoned / $540 recovered today</p>
+          <p>🚨 Alerts: 2 new spam pages (andevtemp) — removal required</p>
+        </div>
+      </div>
+      <div class="card" style="background: var(--green-pale);">
+        <h3 style="font-size: 15px; color: var(--green); margin-bottom: 8px;">Built & Running</h3>
+        <p style="font-size: 13px; line-height: 1.6;">
+          The dashboard is already built in Next.js with TypeScript and TailwindCSS. It's ready to deploy to a custom URL for your team's access. All data connections are ready to wire up to your live systems.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 14: SECTION — IMPLEMENTATION -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide slide-dark" data-slide="13">
+  <div class="section-divider">
+    <div class="section-num">05</div>
+    <h2>Implementation</h2>
+    <p>What's built, what's next, and the projected impact on your business.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 15: WHAT'S BUILT -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide slide-white" data-slide="14">
+  <div class="slide-header">
+    <span class="tag tag-green">Status</span>
+    <h2>What's Already Built</h2>
+    <p>All core workflows are validated and the dashboard is running. Here's the activation checklist.</p>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <h3 style="font-size: 16px; margin-bottom: 16px;">✅ Completed</h3>
+      <table class="tbl">
+        <thead><tr><th>Component</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>WF1A: Backlog Review Converter</td><td><span class="badge badge-green">Built & Validated</span></td></tr>
+          <tr><td>WF1B: Send Approved Emails</td><td><span class="badge badge-green">Built & Validated</span></td></tr>
+          <tr><td>WF2: Live Sentiment Router</td><td><span class="badge badge-green">Built & Validated</span></td></tr>
+          <tr><td>WF3: Cart Abandonment Recovery</td><td><span class="badge badge-green">Built & Validated</span></td></tr>
+          <tr><td>Hermes Dashboard (10 pages)</td><td><span class="badge badge-green">Built & Running</span></td></tr>
+          <tr><td>Build documentation</td><td><span class="badge badge-green">Complete</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h3 style="font-size: 16px; margin-bottom: 16px;">🔜 To Activate</h3>
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="time">Step 1 — Credentials</div>
+          <h4>Connect your accounts</h4>
+          <p>OpenAI API key, Google Sheets OAuth, SMTP, WooCommerce API keys</p>
+        </div>
+        <div class="timeline-item">
+          <div class="time">Step 2 — Sheet Setup</div>
+          <h4>Create 4 Google Sheet tabs</h4>
+          <p>Backlog, Approval Queue, Sentiment Log, Cart Abandonment</p>
+        </div>
+        <div class="timeline-item">
+          <div class="time">Step 3 — Placeholders</div>
+          <h4>Replace 4 placeholder values</h4>
+          <p>Sheet ID, Doreen's email, sender email, WooCommerce domain</p>
+        </div>
+        <div class="timeline-item">
+          <div class="time">Step 4 — Go Live</div>
+          <h4>Activate workflows</h4>
+          <p>Toggle on in n8n. Agents start working immediately. Dashboard deployed.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 16: PROJECTED IMPACT -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide slide-light" data-slide="15">
+  <div class="slide-header">
+    <span class="tag tag-gold">Projected Impact</span>
+    <h2>The Numbers That Matter</h2>
+    <p>Conservative estimates based on industry benchmarks and your current metrics.</p>
+  </div>
+
+  <div class="grid-3" style="margin-bottom: 32px;">
+    <div class="card" style="text-align: center; border: 2px solid var(--green); background: white;">
+      <p style="font-size: 12px; font-weight: 700; color: var(--green); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;">Revenue Recovery</p>
+      <div class="stat">
+        <div class="number text-green">+$7,200</div>
+        <div class="label">Per Month</div>
+      </div>
+      <p style="font-size: 13px; color: var(--muted); margin-top: 12px;">25% cart recovery rate at $180 AOV × 40 abandoned carts/mo</p>
+    </div>
+    <div class="card" style="text-align: center; border: 2px solid var(--blue); background: white;">
+      <p style="font-size: 12px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;">SEO Restoration</p>
+      <div class="stat">
+        <div class="number text-blue">+$28,800</div>
+        <div class="label">Per Month (at #3-4)</div>
+      </div>
+      <p style="font-size: 13px; color: var(--muted); margin-top: 12px;">50% organic traffic increase when indexed pages restored & ranking recovered</p>
+    </div>
+    <div class="card" style="text-align: center; border: 2px solid var(--purple); background: white;">
+      <p style="font-size: 12px; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;">Review Growth</p>
+      <div class="stat">
+        <div class="number text-purple">100+</div>
+        <div class="label">Google Reviews (6mo)</div>
+      </div>
+      <p style="font-size: 13px; color: var(--muted); margin-top: 12px;">From 35 → 100+ with automated, sentiment-filtered review pipeline</p>
+    </div>
+  </div>
+
+  <div class="card" style="background: linear-gradient(135deg, var(--green), #1a4a1c); color: white; text-align: center; padding: 36px;">
+    <p style="font-size: 14px; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Combined Potential Monthly Revenue</p>
+    <p style="font-size: 56px; font-weight: 900; line-height: 1;">$86,400</p>
+    <p style="font-size: 16px; opacity: 0.8; margin-top: 12px;">up from $57,600 baseline — a <strong>50% increase</strong></p>
+  </div>
+
+  <div class="grid-2 mt-24">
+    <div class="card">
+      <h3 style="font-size: 15px;">📧 Newsletter Attribution</h3>
+      <p style="font-size: 13px; margin-top: 8px; line-height: 1.6;">
+        <strong>~$8-9K/week</strong> in proven revenue from "Mondays with Needlepoint" — previously showing $0 in MailChimp reports. This data alone justifies increased email investment.
+      </p>
+    </div>
+    <div class="card">
+      <h3 style="font-size: 15px;">🧵 Silent Majority Activation</h3>
+      <p style="font-size: 13px; margin-top: 8px; line-height: 1.6;">
+        <strong>70%+ of customers</strong> who never contact you will now hear from you at the right time. Some become reviewers, some become repeat buyers, some get saved from giving up. All feel cared about.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 17: CLOSING -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide slide-green" data-slide="16">
+  <div class="hero-center">
+    <img src="artneedlepoint_logo.png" class="logo" alt="Art Needlepoint" onerror="this.style.display='none'">
+    <h1 style="font-size: 48px;">Ready to Activate</h1>
+    <p class="subtitle">
+      Five AI agents. Four automated workflows. One command center.<br>
+      All waiting for your green light.
+    </p>
+    <div style="display: flex; gap: 16px; margin-top: 40px;">
+      <div style="background: rgba(255,255,255,0.15); border-radius: 12px; padding: 20px 32px; text-align: center;">
+        <p style="font-size: 28px; font-weight: 900;">4</p>
+        <p style="font-size: 12px; opacity: 0.7;">Workflows Built</p>
+      </div>
+      <div style="background: rgba(255,255,255,0.15); border-radius: 12px; padding: 20px 32px; text-align: center;">
+        <p style="font-size: 28px; font-weight: 900;">5</p>
+        <p style="font-size: 12px; opacity: 0.7;">AI Agents</p>
+      </div>
+      <div style="background: rgba(255,255,255,0.15); border-radius: 12px; padding: 20px 32px; text-align: center;">
+        <p style="font-size: 28px; font-weight: 900;">10</p>
+        <p style="font-size: 12px; opacity: 0.7;">Dashboard Pages</p>
+      </div>
+      <div style="background: rgba(255,255,255,0.15); border-radius: 12px; padding: 20px 32px; text-align: center;">
+        <p style="font-size: 28px; font-weight: 900;">24/7</p>
+        <p style="font-size: 12px; opacity: 0.7;">Always On</p>
+      </div>
+    </div>
+    <p style="font-size: 14px; opacity: 0.5; margin-top: 48px;">Presented by Reputation Heal · reputationheal.com</p>
+  </div>
+</div>
+
+</div><!-- /deck -->
+
+<!-- Navigation Bar -->
+<div class="nav-bar">
+  <span class="brand">Reputation Heal</span>
+  <span class="counter" id="counter">1 / 17</span>
+  <div class="nav-btns">
+    <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>← Prev</button>
+    <button class="nav-btn" id="nextBtn" onclick="navigate(1)">Next →</button>
+  </div>
+</div>
+
+<div class="key-hint">← → Arrow keys to navigate</div>
+
+<script>
+  let current = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  const counter = document.getElementById('counter');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const progressBar = document.getElementById('progressBar');
+
+  function showSlide(index) {
+    slides.forEach((s, i) => {
+      s.classList.remove('active');
+      if (i === index) s.classList.add('active');
+    });
+    counter.textContent = `${index + 1} / ${total}`;
+    prevBtn.disabled = index === 0;
+    nextBtn.disabled = index === total - 1;
+    progressBar.style.width = `${((index + 1) / total) * 100}%`;
+  }
+
+  function navigate(dir) {
+    const next = current + dir;
+    if (next >= 0 && next < total) {
+      current = next;
+      showSlide(current);
+    }
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); navigate(1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); navigate(-1); }
+    if (e.key === 'Home') { current = 0; showSlide(0); }
+    if (e.key === 'End') { current = total - 1; showSlide(current); }
+  });
+
+  showSlide(0);
+</script>
+
+</body>
+</html>

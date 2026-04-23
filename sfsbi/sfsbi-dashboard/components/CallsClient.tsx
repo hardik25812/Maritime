@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Search, Filter, X, Download } from 'lucide-react'
 import CallRow from '@/components/CallRow'
 import TopBar from '@/components/TopBar'
-import { supabase } from '@/lib/supabase'
+import { supabase, SFSBI_TABLE } from '@/lib/supabase'
 import type { CallLog } from '@/lib/supabase'
 
 const LEAD_OPTS = ['all', 'high', 'medium', 'low']
@@ -26,7 +26,7 @@ export default function CallsClient() {
   const fetchCalls = useCallback(async (showRefreshing = false) => {
     if (showRefreshing) setRefreshing(true)
     const { data } = await supabase
-      .from('call_logs')
+      .from(SFSBI_TABLE)
       .select('*')
       .order('received_at', { ascending: false })
       .limit(500)

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Star, Phone, Calendar, TrendingUp } from 'lucide-react'
 import TopBar from '@/components/TopBar'
 import Badge from '@/components/Badge'
-import { supabase } from '@/lib/supabase'
+import { supabase, SFSBI_TABLE } from '@/lib/supabase'
 import type { CallLog } from '@/lib/supabase'
 import { formatDate, formatPhone, getLeadScoreColor, getServiceLabel } from '@/lib/utils'
 
@@ -19,7 +19,7 @@ export default function LeadsClient() {
   const fetchCalls = useCallback(async (showRefreshing = false) => {
     if (showRefreshing) setRefreshing(true)
     const { data } = await supabase
-      .from('call_logs')
+      .from(SFSBI_TABLE)
       .select('*')
       .eq('intake_collected', true)
       .order('received_at', { ascending: false })

@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SFSBI — AI Receptionist Automation Flow</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #0a0e1a;
+    color: #e0e4f0;
+    overflow-x: hidden;
+  }
+
+  /* ---- SLIDE SYSTEM ---- */
+  .slide {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 40px;
+    position: relative;
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .slide.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ---- TITLE SLIDE ---- */
+  .slide-title {
+    background: linear-gradient(135deg, #0a0e1a 0%, #1a2744 50%, #0a0e1a 100%);
+  }
+  .logo-box {
+    width: 90px; height: 90px;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    border-radius: 24px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; font-weight: 800; color: white;
+    margin-bottom: 32px;
+    box-shadow: 0 0 60px rgba(37, 99, 235, 0.3);
+  }
+  h1 {
+    font-size: clamp(32px, 5vw, 56px);
+    font-weight: 800;
+    text-align: center;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa, #60a5fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.2;
+  }
+  .subtitle {
+    font-size: 18px;
+    color: #7b8ab8;
+    margin-top: 12px;
+    text-align: center;
+    max-width: 500px;
+  }
+
+  /* ---- SECTION HEADINGS ---- */
+  .section-number {
+    font-size: 14px;
+    font-weight: 600;
+    color: #7c3aed;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  h2 {
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 40px;
+    color: #f0f2fa;
+  }
+
+  /* ---- FLOW DIAGRAM ---- */
+  .flow-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    max-width: 700px;
+    width: 100%;
+  }
+  .flow-step {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 28px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    width: 100%;
+    opacity: 0;
+    transform: translateX(-30px);
+    transition: all 0.6s ease;
+    cursor: default;
+  }
+  .flow-step.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .flow-step:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(124, 58, 237, 0.4);
+    transform: translateX(6px);
+  }
+  .flow-icon {
+    width: 50px; height: 50px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+  .flow-label {
+    font-weight: 600;
+    font-size: 16px;
+    color: #f0f2fa;
+  }
+  .flow-desc {
+    font-size: 13px;
+    color: #7b8ab8;
+    margin-top: 2px;
+  }
+  .flow-arrow {
+    width: 2px;
+    height: 32px;
+    background: linear-gradient(180deg, rgba(124,58,237,0.6), rgba(37,99,235,0.3));
+    position: relative;
+  }
+  .flow-arrow::after {
+    content: '▼';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: #7c3aed;
+  }
+
+  /* ---- SPLIT CARDS ---- */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    max-width: 1000px;
+    width: 100%;
+  }
+  .card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 32px;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s ease;
+  }
+  .card.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .card:hover {
+    border-color: rgba(124, 58, 237, 0.4);
+    background: rgba(255,255,255,0.06);
+    transform: translateY(-4px);
+  }
+  .card-icon {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    margin-bottom: 16px;
+  }
+  .card h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #f0f2fa;
+    margin-bottom: 8px;
+  }
+  .card p {
+    font-size: 14px;
+    color: #7b8ab8;
+    line-height: 1.6;
+  }
+
+  /* ---- DATA FIELDS TABLE ---- */
+  .fields-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+    max-width: 900px;
+    width: 100%;
+  }
+  .field-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #c0c8e0;
+    opacity: 0;
+    transform: scale(0.9);
+    transition: all 0.4s ease;
+  }
+  .field-chip.visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .field-chip:hover {
+    border-color: rgba(96, 165, 250, 0.5);
+    background: rgba(96, 165, 250, 0.08);
+  }
+  .field-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ---- WORKFLOW CARDS ---- */
+  .wf-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 36px;
+    max-width: 600px;
+    width: 100%;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s ease;
+  }
+  .wf-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .wf-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .wf-trigger {
+    font-size: 13px;
+    color: #7b8ab8;
+    margin-bottom: 16px;
+  }
+  .wf-steps {
+    list-style: none;
+    padding: 0;
+  }
+  .wf-steps li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 0;
+    font-size: 14px;
+    color: #c0c8e0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .wf-steps li:last-child { border-bottom: none; }
+  .wf-step-num {
+    width: 24px; height: 24px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+    color: white;
+  }
+
+  /* ---- DASHBOARD PREVIEW ---- */
+  .dash-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    max-width: 900px;
+    width: 100%;
+  }
+  .dash-page {
+    padding: 24px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.5s ease;
+    cursor: default;
+  }
+  .dash-page.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .dash-page:hover {
+    border-color: rgba(96, 165, 250, 0.4);
+    background: rgba(96, 165, 250, 0.06);
+    transform: translateY(-3px);
+  }
+  .dash-page .icon { font-size: 28px; margin-bottom: 10px; }
+  .dash-page .name { font-weight: 600; font-size: 15px; color: #f0f2fa; }
+  .dash-page .desc { font-size: 12px; color: #7b8ab8; margin-top: 4px; }
+
+  /* ---- STATUS TABLE ---- */
+  .status-table {
+    max-width: 700px;
+    width: 100%;
+  }
+  .status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: all 0.5s ease;
+  }
+  .status-row.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .status-row:hover { background: rgba(255,255,255,0.03); border-radius: 10px; }
+  .status-label { font-size: 15px; font-weight: 500; }
+  .status-badge {
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .badge-live { background: rgba(34,197,94,0.15); color: #4ade80; }
+  .badge-pending { background: rgba(250,204,21,0.15); color: #facc15; }
+
+  /* ---- COLORS ---- */
+  .bg-blue { background: rgba(37,99,235,0.15); }
+  .bg-purple { background: rgba(124,58,237,0.15); }
+  .bg-green { background: rgba(34,197,94,0.15); }
+  .bg-amber { background: rgba(245,158,11,0.15); }
+  .bg-red { background: rgba(239,68,68,0.15); }
+  .bg-cyan { background: rgba(6,182,212,0.15); }
+  .bg-pink { background: rgba(236,72,153,0.15); }
+
+  .text-blue { color: #60a5fa; }
+  .text-purple { color: #a78bfa; }
+  .text-green { color: #4ade80; }
+  .text-amber { color: #fbbf24; }
+  .text-red { color: #f87171; }
+  .text-cyan { color: #22d3ee; }
+  .text-pink { color: #f472b6; }
+
+  /* ---- NAV DOTS ---- */
+  .nav-dots {
+    position: fixed;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 100;
+  }
+  .nav-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    cursor: pointer;
+    transition: all 0.3s;
+    border: none;
+  }
+  .nav-dot.active {
+    background: #7c3aed;
+    box-shadow: 0 0 12px rgba(124, 58, 237, 0.5);
+    transform: scale(1.3);
+  }
+
+  /* ---- SCROLL HINT ---- */
+  .scroll-hint {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    animation: bounce 2s infinite;
+    color: #4a5580;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-8px); }
+  }
+
+  /* ---- DIVIDER ---- */
+  .divider {
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, #2563eb, #7c3aed);
+    border-radius: 2px;
+    margin-bottom: 32px;
+  }
+
+  /* ---- PULSE DOT ---- */
+  .pulse-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #4ade80;
+    display: inline-block;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.5); }
+    70% { box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+  }
+
+  /* Spacing between workflow slides */
+  .wf-spacer { height: 20px; }
+</style>
+</head>
+<body>
+
+<!-- NAV DOTS -->
+<div class="nav-dots" id="navDots"></div>
+
+<!-- ======================================== -->
+<!-- SLIDE 1: TITLE -->
+<!-- ======================================== -->
+<div class="slide slide-title" data-slide="0">
+  <div class="logo-box">SFS</div>
+  <h1>AI Receptionist<br>Automation System</h1>
+  <p class="subtitle">South Florida Surgery, Bariatric & Cosmetic Institute</p>
+  <div class="scroll-hint">
+    Scroll to explore ↓
+  </div>
+</div>
+
+<!-- ======================================== -->
+<!-- SLIDE 2: THE CALL FLOW -->
+<!-- ======================================== -->
+<div class="slide" data-slide="1">
+  <div class="section-number">01</div>
+  <h2>How a Call Flows</h2>
+  <div class="flow-container">
+
+    <div class="flow-step" data-delay="0">
+      <div class="flow-icon bg-blue">📞</div>
+      <div>
+        <div class="flow-label">Caller Dials +1 (645) 218-8532</div>
+        <div class="flow-desc">Patient or prospect calls the SFSBI number</div>
+      </div>
+    </div>
+    <div class="flow-arrow"></div>
+
+    <div class="flow-step" data-delay="100">
+      <div class="flow-icon bg-red">🔗</div>
+      <div>
+        <div class="flow-label">Twilio SIP Trunk</div>
+        <div class="flow-desc">Receives call and routes via Elastic SIP to Retell AI</div>
+      </div>
+    </div>
+    <div class="flow-arrow"></div>
+
+    <div class="flow-step" data-delay="200">
+      <div class="flow-icon bg-purple">🤖</div>
+      <div>
+        <div class="flow-label">Dorothy Answers (Retell AI)</div>
+        <div class="flow-desc">Greets caller, answers questions, collects intake — English & Spanish</div>
+      </div>
+    </div>
+    <div class="flow-arrow"></div>
+
+    <div class="flow-step" data-delay="300">
+      <div class="flow-icon bg-amber">⚡</div>
+      <div>
+        <div class="flow-label">Post-Call Webhook → n8n</div>
+        <div class="flow-desc">15 data fields extracted and sent to automation engine</div>
+      </div>
+    </div>
+    <div class="flow-arrow"></div>
+
+    <div class="flow-step" data-delay="400">
+      <div class="flow-icon bg-green">📊</div>
+      <div>
+        <div class="flow-label">Dashboard + Supabase + SMS</div>
+        <div class="flow-desc">Data saved, dashboard updated in real-time, urgent alerts sent via SMS</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ======================================== -->
+<!-- SLIDE 3: DOROTHY -->
+<!-- ======================================== -->
+<div class="slide" data-slide="2">
+  <div class="section-number">02</div>
+  <h2>Meet Dorothy</h2>
+  <div class="cards-grid">
+
+    <div class="card" data-delay="0">
+      <div class="card-icon bg-purple">🎙️</div>
+      <h3>Voice & Personality</h3>
+      <p>Grace voice by ElevenLabs — warm, professional, natural. Uses "mm-hmm" and "right" to stay engaged. Call-center ambient sound for realism.</p>
+    </div>
+
+    <div class="card" data-delay="100">
+      <div class="card-icon bg-blue">🧠</div>
+      <h3>15-Section Prompt</h3>
+      <p>Identity, speaking rules, insurance handling, urgency detection, bilingual support, data collection, lead scoring, objection handling, and safety rails.</p>
+    </div>
+
+    <div class="card" data-delay="200">
+      <div class="card-icon bg-green">🌎</div>
+      <h3>Bilingual</h3>
+      <p>Detects Spanish instantly and switches fluently. "Claro", "Perfecto", "Con mucho gusto" — natural and warm, not robotic translation.</p>
+    </div>
+
+    <div class="card" data-delay="300">
+      <div class="card-icon bg-red">🚨</div>
+      <h3>Urgency Detection</h3>
+      <p>Flags severe pain, bleeding, infection, breathing difficulty. Sets urgency_flag and triggers immediate SMS to Sheena.</p>
+    </div>
+
+    <div class="card" data-delay="400">
+      <div class="card-icon bg-amber">💰</div>
+      <h3>Insurance Handling</h3>
+      <p>Explains cash-pay practice, reframes as benefit — "no surprise bills." Mentions HSA/FSA and financing. Never loses the lead.</p>
+    </div>
+
+    <div class="card" data-delay="500">
+      <div class="card-icon bg-cyan">📋</div>
+      <h3>Smart Intake</h3>
+      <p>Collects name → phone → service → how heard — one at a time. Confirms back everything before ending. Scores leads automatically.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ======================================== -->
+<!-- SLIDE 4: 15 DATA FIELDS -->
+<!-- ======================================== -->
+<div class="slide" data-slide="3">
+  <div class="section-number">03</div>
+  <h2>15 Fields Captured Per Call</h2>
+  <div class="fields-grid">
+    <div class="field-chip" data-delay="0"><div class="field-dot" style="background:#60a5fa"></div>caller_name</div>
+    <div class="field-chip" data-delay="30"><div class="field-dot" style="background:#60a5fa"></div>caller_phone</div>
+    <div class="field-chip" data-delay="60"><div class="field-dot" style="background:#a78bfa"></div>service_interest</div>
+    <div class="field-chip" data-delay="90"><div class="field-dot" style="background:#a78bfa"></div>how_heard_about_us</div>
+    <div class="field-chip" data-delay="120"><div class="field-dot" style="background:#22d3ee"></div>language_used</div>
+    <div class="field-chip" data-delay="150"><div class="field-dot" style="background:#fbbf24"></div>lead_score</div>
+    <div class="field-chip" data-delay="180"><div class="field-dot" style="background:#f87171"></div>urgency_flag</div>
+    <div class="field-chip" data-delay="210"><div class="field-dot" style="background:#a78bfa"></div>call_type</div>
+    <div class="field-chip" data-delay="240"><div class="field-dot" style="background:#4ade80"></div>after_hours</div>
+    <div class="field-chip" data-delay="270"><div class="field-dot" style="background:#f87171"></div>is_spam</div>
+    <div class="field-chip" data-delay="300"><div class="field-dot" style="background:#f472b6"></div>wants_human</div>
+    <div class="field-chip" data-delay="330"><div class="field-dot" style="background:#22d3ee"></div>bmi_mentioned</div>
+    <div class="field-chip" data-delay="360"><div class="field-dot" style="background:#4ade80"></div>intake_collected</div>
+    <div class="field-chip" data-delay="390"><div class="field-dot" style="background:#fbbf24"></div>call_outcome</div>
+    <div class="field-chip" data-delay="420"><div class="field-dot" style="background:#60a5fa"></div>call_summary</div>
+  </div>
+  <p style="margin-top: 32px; font-size: 14px; color: #4a5580; text-align: center;">Every field is AI-extracted and saved to the database automatically — zero manual entry.</p>
+</div>
+
+<!-- ======================================== -->
+<!-- SLIDE 5: WORKFLOWS -->
+<!-- ======================================== -->
+<div class="slide" data-slide="4">
+  <div class="section-number">04</div>
+  <h2>Automation Workflows</h2>
+
+  <div style="display:flex; flex-direction:column; gap:28px; max-width: 640px; width: 100%;">
+
+    <!-- WF1 -->
+    <div class="wf-card" data-delay="0">
+      <div class="wf-badge bg-green text-green">⚡ WORKFLOW 1</div>
+      <h3 style="font-size:20px; font-weight:700; color:#f0f2fa; margin-bottom:4px;">Post-Call Handler</h3>
+      <div class="wf-trigger">Triggers: Every time a call ends</div>
+      <ul class="wf-steps">
+        <li><div class="wf-step-num bg-green">1</div>Retell webhook fires with call data</li>
+        <li><div class="wf-step-num bg-green">2</div>Extract 15 fields from payload</li>
+        <li><div class="wf-step-num bg-green">3</div>Save to Supabase → dashboard updates in real-time</li>
+        <li><div class="wf-step-num bg-green">4</div>If urgent → SMS alert to Sheena immediately</li>
+      </ul>
+    </div>
+
+    <!-- WF2 -->
+    <div class="wf-card" data-delay="150">
+      <div class="wf-badge bg-red text-red">🚨 WORKFLOW 2</div>
+      <h3 style="font-size:20px; font-weight:700; color:#f0f2fa; margin-bottom:4px;">Urgent Escalation</h3>
+      <div class="wf-trigger">Triggers: urgency_flag = "urgent" or "emergency"</div>
+      <ul class="wf-steps">
+        <li><div class="wf-step-num bg-red">1</div>Detects urgent or emergency flag</li>
+        <li><div class="wf-step-num bg-red">2</div>Sends immediate SMS to Sheena's phone</li>
+        <li><div class="wf-step-num bg-red">3</div>Includes caller name, phone, and reason</li>
+      </ul>
+    </div>
+
+    <!-- WF3 -->
+    <div class="wf-card" data-delay="300">
+      <div class="wf-badge bg-blue text-blue">📧 WORKFLOW 3</div>
+      <h3 style="font-size:20px; font-weight:700; color:#f0f2fa; margin-bottom:4px;">Weekly Report</h3>
+      <div class="wf-trigger">Triggers: Every Monday at 9:00 AM</div>
+      <ul class="wf-steps">
+        <li><div class="wf-step-num bg-blue">1</div>Pull last 7 days of calls from Supabase</li>
+        <li><div class="wf-step-num bg-blue">2</div>Generate summary: totals, leads, top services</li>
+        <li><div class="wf-step-num bg-blue">3</div>Email full report to Sheena</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<!-- ======================================== -->
+<!-- SLIDE 6: DASHBOARD PAGES -->
+<!-- ======================================== -->
+<div class="slide" data-slide="5">
+  <div class="section-number">05</div>
+  <h2>QC Dashboard — 7 Pages</h2>
+  <div class="dash-grid">
+    <div class="dash-page" data-delay="0"><div class="icon">📊</div><div class="name">Dashboard</div><div class="desc">Stats, charts, recent calls</div></div>
+    <div class="dash-page" data-delay="60"><div class="icon">📞</div><div class="name">All Calls</div><div class="desc">Search, filter, export CSV</div></div>
+    <div class="dash-page" data-delay="120"><div class="icon">🎯</div><div class="name">Leads</div><div class="desc">High / Medium / Low tabs</div></div>
+    <div class="dash-page" data-delay="180"><div class="icon">🚨</div><div class="name">Urgent</div><div class="desc">Real-time urgent alerts</div></div>
+    <div class="dash-page" data-delay="240"><div class="icon">📈</div><div class="name">Analytics</div><div class="desc">Trends, breakdowns, sentiment</div></div>
+    <div class="dash-page" data-delay="300"><div class="icon">📋</div><div class="name">Weekly Report</div><div class="desc">Auto-generated, email/PDF</div></div>
+    <div class="dash-page" data-delay="360"><div class="icon">⚙️</div><div class="name">Settings</div><div class="desc">IDs, webhooks, checklist</div></div>
+  </div>
+  <p style="margin-top: 32px; font-size: 15px; color: #7b8ab8; text-align: center;">
+    <span class="pulse-dot"></span>&nbsp;&nbsp;Live at <strong style="color: #60a5fa;">sfsbi-dashboard.vercel.app</strong>
+  </p>
+</div>
+
+<!-- ======================================== -->
+<!-- SLIDE 7: STATUS -->
+<!-- ======================================== -->
+<div class="slide" data-slide="6">
+  <div class="section-number">06</div>
+  <h2>System Status</h2>
+  <div class="status-table">
+    <div class="status-row" data-delay="0"><span class="status-label">📞 Phone Number (+1 645-218-8532)</span><span class="status-badge badge-live">✅ Live</span></div>
+    <div class="status-row" data-delay="50"><span class="status-label">🤖 Dorothy (AI Receptionist)</span><span class="status-badge badge-live">✅ Active</span></div>
+    <div class="status-row" data-delay="100"><span class="status-label">🌎 English + Spanish</span><span class="status-badge badge-live">✅ Working</span></div>
+    <div class="status-row" data-delay="150"><span class="status-label">📊 QC Dashboard (Vercel)</span><span class="status-badge badge-live">✅ Deployed</span></div>
+    <div class="status-row" data-delay="200"><span class="status-label">🗄️ Supabase Database</span><span class="status-badge badge-live">✅ 28 Calls Logged</span></div>
+    <div class="status-row" data-delay="250"><span class="status-label">⚡ WF1 — Post-Call Handler</span><span class="status-badge badge-live">✅ Active</span></div>
+    <div class="status-row" data-delay="300"><span class="status-label">🚨 WF2 — Urgent Escalation</span><span class="status-badge badge-live">✅ Active</span></div>
+    <div class="status-row" data-delay="350"><span class="status-label">📧 WF3 — Weekly Report</span><span class="status-badge badge-pending">⏳ Needs Gmail</span></div>
+    <div class="status-row" data-delay="400"><span class="status-label">🔗 SIP Trunk Routing</span><span class="status-badge badge-live">✅ Configured</span></div>
+  </div>
+</div>
+
+<!-- ======================================== -->
+<!-- SLIDE 8: CLOSING -->
+<!-- ======================================== -->
+<div class="slide slide-title" data-slide="7">
+  <div class="logo-box">SFS</div>
+  <h1>Every Call. Answered.<br>Every Lead. Captured.</h1>
+  <p class="subtitle" style="margin-top:16px; font-size:16px;">Zero missed calls. Zero manual data entry.<br>Sheena just checks the dashboard and calls back.</p>
+  <div style="margin-top: 40px; display:flex; gap: 16px; flex-wrap: wrap; justify-content: center;">
+    <a href="https://sfsbi-dashboard.vercel.app" target="_blank" style="padding: 12px 28px; background: linear-gradient(135deg, #2563eb, #7c3aed); color: white; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 14px;">Open Dashboard →</a>
+    <a href="tel:+16452188532" style="padding: 12px 28px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #e0e4f0; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 14px;">Call Dorothy 📞</a>
+  </div>
+</div>
+
+<script>
+  // ---- INTERSECTION OBSERVER FOR ANIMATIONS ----
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.15 });
+
+  // Observe slides
+  document.querySelectorAll('.slide').forEach(s => observer.observe(s));
+
+  // Observe animated elements with staggered delays
+  const animElements = document.querySelectorAll('.flow-step, .card, .field-chip, .wf-card, .dash-page, .status-row');
+  const staggerObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const delay = parseInt(entry.target.dataset.delay || 0);
+        setTimeout(() => entry.target.classList.add('visible'), delay);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  animElements.forEach(el => staggerObserver.observe(el));
+
+  // ---- NAV DOTS ----
+  const slides = document.querySelectorAll('.slide');
+  const navDots = document.getElementById('navDots');
+
+  slides.forEach((_, i) => {
+    const dot = document.createElement('button');
+    dot.className = 'nav-dot';
+    dot.addEventListener('click', () => slides[i].scrollIntoView({ behavior: 'smooth' }));
+    navDots.appendChild(dot);
+  });
+
+  const dots = document.querySelectorAll('.nav-dot');
+  const dotObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const idx = parseInt(entry.target.dataset.slide);
+        dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+      }
+    });
+  }, { threshold: 0.5 });
+
+  slides.forEach(s => dotObserver.observe(s));
+</script>
+</body>
+</html>

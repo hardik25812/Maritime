@@ -12,7 +12,7 @@ import {
 import StatCard from '@/components/StatCard'
 import CallRow from '@/components/CallRow'
 import TopBar from '@/components/TopBar'
-import { supabase } from '@/lib/supabase'
+import { supabase, SFSBI_TABLE } from '@/lib/supabase'
 import type { CallLog } from '@/lib/supabase'
 import { formatDateShort, getServiceLabel } from '@/lib/utils'
 
@@ -30,7 +30,7 @@ export default function DashboardClient() {
   const fetchCalls = useCallback(async (showRefreshing = false) => {
     if (showRefreshing) setRefreshing(true)
     const { data, error } = await supabase
-      .from('call_logs')
+      .from(SFSBI_TABLE)
       .select('*')
       .order('received_at', { ascending: false })
       .limit(200)
@@ -43,8 +43,8 @@ export default function DashboardClient() {
     fetchCalls()
     // Real-time subscription
     const channel = supabase
-      .channel('call_logs_changes')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'call_logs' },
+      .channel('sfsbi_call_logs_changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: SFSBI_TABLE },
         (payload) => setCalls(prev => [payload.new as CallLog, ...prev])
       )
       .subscribe()

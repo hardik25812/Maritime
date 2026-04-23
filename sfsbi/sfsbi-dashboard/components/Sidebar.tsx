@@ -11,6 +11,7 @@ import {
   Calendar,
   Settings,
   Activity,
+  BookOpen,
   LogOut,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -22,6 +23,7 @@ const nav = [
   { href: '/leads',      label: 'Lead Tracker', icon: TrendingUp },
   { href: '/urgent',     label: 'Urgent Flags', icon: AlertTriangle },
   { href: '/analytics',  label: 'Analytics',    icon: Activity },
+  { href: '/knowledge',  label: 'Knowledge Base', icon: BookOpen },
   { href: '/weekly',     label: 'Weekly Report',icon: Calendar },
 ]
 

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Calendar, Download, Send } from 'lucide-react'
 import TopBar from '@/components/TopBar'
-import { supabase } from '@/lib/supabase'
+import { supabase, SFSBI_TABLE } from '@/lib/supabase'
 import type { CallLog } from '@/lib/supabase'
 import { getServiceLabel } from '@/lib/utils'
 
@@ -16,7 +16,7 @@ export default function WeeklyClient() {
   const fetchCalls = useCallback(async () => {
     const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
     const { data } = await supabase
-      .from('call_logs')
+      .from(SFSBI_TABLE)
       .select('*')
       .gte('received_at', cutoff)
       .order('received_at', { ascending: false })
