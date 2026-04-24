@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Lock, Mail, ShieldCheck } from 'lucide-react'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -40,13 +41,19 @@ export default function LoginPage() {
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
           <div className="bg-[#1a3a5c] px-8 py-8 text-center">
-            <div className="flex items-center justify-center mb-4">
-              <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-md overflow-hidden">
-                <span className="text-2xl font-black text-[#1a3a5c]">SFS</span>
+            <div className="flex items-center justify-center mb-5">
+              <div className="bg-white rounded-2xl px-5 py-3 shadow-md">
+                <Image
+                  src="/sfsbi-logo.webp"
+                  alt="South Florida Surgery & Bariatric Institute"
+                  width={220}
+                  height={56}
+                  priority
+                  className="h-12 w-auto object-contain"
+                />
               </div>
             </div>
-            <h1 className="text-white font-bold text-xl tracking-tight">South Florida Surgery</h1>
-            <p className="text-[#7ab3e0] text-sm mt-0.5">Bariatric Institute — AI Receptionist Dashboard</p>
+            <p className="text-[#7ab3e0] text-sm mt-1">AI Receptionist Dashboard</p>
           </div>
 
           <div className="px-8 py-8">
