@@ -3,8 +3,7 @@ import json, urllib.request, urllib.error
 KEY = "key_70acf8e731936d5abafc26e9d116"
 LLM = "llm_cab07a332ad0ee72450127f9ec95"
 
-# PLACEHOLDER — swap this with Sheena's real number when received
-SHEENA_NUMBER = "+16452188532"  # PLACEHOLDER — using SFSBI Twilio num. Replace with Sheena's real cell when received.
+SHEENA_NUMBER = "+17863681519"  # Sheena's real cell — confirmed 2026-04-24
 
 def api(method, endpoint, data=None):
     url = f"https://api.retellai.com{endpoint}"
